@@ -8,6 +8,7 @@ import SwiperPic2 from "../public/images/swiperpic2.png";
 import SwiperPic3 from "../public/images/swiperpic3.png";
 import Footer from "./components/Footer/Footer";
 import CoursesSection from "./components/CoursesSection/CoursesSection";
+import SignUpModal from "./components/SignUpModal/SignUpModal";
 
 const slides = [
   {
@@ -34,6 +35,7 @@ const slides = [
 
 export default function Home() {
   const [current, setCurrent] = useState(0);
+  const [showSignUpModal, setShowSignUpModal] = useState(false);
 
   const prev = () => setCurrent((c) => Math.max(c - 1, 0));
   const next = () => setCurrent((c) => Math.min(c + 1, slides.length - 1));
@@ -43,6 +45,11 @@ export default function Home() {
 
   return (
     <>
+      <SignUpModal
+        isOpen={showSignUpModal}
+        onClose={() => setShowSignUpModal(false)}
+      />
+
       <div className="w-[1566px] h-[60px] mx-auto my-[24px] flex justify-between items-center">
         <div className="w-[60px] h-[60px] bg-[#4F46E5] rounded-[14px] flex items-center justify-center">
           <Image
@@ -51,7 +58,7 @@ export default function Home() {
             height={30}
             alt="logo"
             className="w-[29px] h-[30px]"
-          ></Image>
+          />
         </div>
         <div className="flex items-center">
           <div className="w-[220px] h-[56px] gap-[8px] flex items-center justify-center">
@@ -61,7 +68,7 @@ export default function Home() {
               height={26}
               alt="NavIcon"
               className="w-[26px] h-[26px]"
-            ></Image>
+            />
             <p className="text-[#525252] font-medium text-[20px] leading-none tracking-normal">
               Browse Courses
             </p>
@@ -69,7 +76,10 @@ export default function Home() {
           <div className="w-[114px] h-[60px] border-[2px] border-[#958FEF] rounded-[8px] ml-[36px] text-[#4F46E5] flex items-center justify-center font-medium text-[20px] leading-none tracking-normal text-center">
             Log In
           </div>
-          <div className="w-[125px] h-[60px] bg-[#4F46E5] rounded-[8px] flex items-center justify-center ml-[17px] font-medium text-[20px] leading-none tracking-normal text-center text-white">
+          <div
+            className="w-[125px] h-[60px] bg-[#4F46E5] rounded-[8px] flex items-center justify-center ml-[17px] font-medium text-[20px] leading-none tracking-normal text-center text-white cursor-pointer"
+            onClick={() => setShowSignUpModal(true)}
+          >
             Sign Up
           </div>
         </div>
@@ -137,7 +147,6 @@ export default function Home() {
                       fillOpacity={isFirst ? "0.5" : "1"}
                     />
                   </svg>
-
                   <svg
                     width="44"
                     height="44"
