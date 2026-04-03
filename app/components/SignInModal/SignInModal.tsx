@@ -5,12 +5,14 @@ interface SignInModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSignUpClick?: () => void;
+  onSuccess?: () => void; 
 }
 
 export default function SignInModal({
   isOpen,
   onClose,
   onSignUpClick,
+  onSuccess,
 }: SignInModalProps) {
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -100,6 +102,7 @@ export default function SignInModal({
       } else {
         console.log("Login success:", data);
         handleClose();
+        onSuccess?.();
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -176,7 +179,8 @@ export default function SignInModal({
           <div className="flex flex-col">
             <label
               htmlFor="signin-password"
-              className="mt-[24px] text-sm font-medium"
+              className="text-sm font-medium"
+              style={{ marginTop: emailError ? "12px" : "24px" }} 
             >
               Password*
             </label>
@@ -246,10 +250,10 @@ export default function SignInModal({
               </p>
             )}
           </div>
-
           <div
-            className="w-[360px] h-[47px] bg-[#4F46E5] rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white mt-[18px] cursor-pointer"
+            className="w-[360px] h-[47px] bg-[#4F46E5] rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white cursor-pointer"
             style={{
+              marginTop: passwordError ? "10px" : "18px",
               opacity: isSubmitting ? 0.7 : 1,
               pointerEvents: isSubmitting ? "none" : "auto",
             }}
