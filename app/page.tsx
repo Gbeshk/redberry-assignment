@@ -9,6 +9,7 @@ import SwiperPic3 from "../public/images/swiperpic3.png";
 import Footer from "./components/Footer/Footer";
 import CoursesSection from "./components/CoursesSection/CoursesSection";
 import SignUpModal from "./components/SignUpModal/SignUpModal";
+import SignInModal from "./components/SignInModal/SignInModal";
 
 const slides = [
   {
@@ -36,7 +37,7 @@ const slides = [
 export default function Home() {
   const [current, setCurrent] = useState(0);
   const [showSignUpModal, setShowSignUpModal] = useState(false);
-
+  const [showSignInModal, setShowSignInModal] = useState(false);
   const prev = () => setCurrent((c) => Math.max(c - 1, 0));
   const next = () => setCurrent((c) => Math.min(c + 1, slides.length - 1));
 
@@ -48,6 +49,22 @@ export default function Home() {
       <SignUpModal
         isOpen={showSignUpModal}
         onClose={() => setShowSignUpModal(false)}
+        onSuccess={() => {
+          setShowSignUpModal(false);
+          setShowSignInModal(true);
+        }}
+        onSignInClick={() => {
+          setShowSignUpModal(false);
+          setShowSignInModal(true);
+        }}
+      />
+      <SignInModal
+        isOpen={showSignInModal}
+        onClose={() => setShowSignInModal(false)}
+        onSignUpClick={() => {
+          setShowSignInModal(false);
+          setShowSignUpModal(true);
+        }}
       />
 
       <div className="w-[1566px] h-[60px] mx-auto my-[24px] flex justify-between items-center">
@@ -73,7 +90,10 @@ export default function Home() {
               Browse Courses
             </p>
           </div>
-          <div className="w-[114px] h-[60px] border-[2px] border-[#958FEF] rounded-[8px] ml-[36px] text-[#4F46E5] flex items-center justify-center font-medium text-[20px] leading-none tracking-normal text-center">
+          <div
+            className="w-[114px] h-[60px] border-[2px] border-[#958FEF] rounded-[8px] ml-[36px] text-[#4F46E5] flex items-center justify-center font-medium text-[20px] leading-none tracking-normal text-center cursor-pointer"
+            onClick={() => setShowSignInModal(true)}
+          >
             Log In
           </div>
           <div

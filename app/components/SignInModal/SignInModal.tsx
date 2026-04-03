@@ -4,9 +4,14 @@ import { useEffect, useState } from "react";
 interface SignInModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSignUpClick?: () => void;
 }
 
-export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
+export default function SignInModal({
+  isOpen,
+  onClose,
+  onSignUpClick,
+}: SignInModalProps) {
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
@@ -32,8 +37,9 @@ export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
     setShowPassword(false);
     onClose();
   };
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     let hasError = false;
 
     if (!email.trim()) {
@@ -57,9 +63,50 @@ export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
     }
 
     if (hasError) return;
-    // handle sign in logic here
-  };
 
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(
+        "https://api.redclass.redberryinternship.ge/api/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        },
+      );
+
+      const rawText = await response.text();
+      let data: unknown = null;
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        console.warn("Response is not JSON");
+      }
+
+      if (!response.ok) {
+        if (response.status === 422 || response.status === 401) {
+          setEmailError("Invalid email or password.");
+        }
+        console.error(
+          "Login failed — status:",
+          response.status,
+          "body:",
+          data ?? rawText,
+        );
+      } else {
+        console.log("Login success:", data);
+        handleClose();
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   if (!isOpen) return null;
 
   return (
@@ -70,7 +117,7 @@ export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
     >
       <div
         className="bg-white rounded-[16px]"
-        style={{ width: "460px", height: "441px" }}
+        style={{ width: "460px", height: "481px" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mt-[21px] flex items-center justify-between px-[16px]">
@@ -202,9 +249,13 @@ export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
 
           <div
             className="w-[360px] h-[47px] bg-[#4F46E5] rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white mt-[18px] cursor-pointer"
+            style={{
+              opacity: isSubmitting ? 0.7 : 1,
+              pointerEvents: isSubmitting ? "none" : "auto",
+            }}
             onClick={handleSignIn}
           >
-            Log In
+            {isSubmitting ? "Logging In..." : "Log In"}
           </div>
 
           <div className="flex items-center w-[320px] mx-auto mt-[16px] h-[21px]">
@@ -219,7 +270,13 @@ export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
             <p className="text-[#666666] font-normal text-[12px] leading-[100%] tracking-[0%] text-center">
               Don&apos;t have an account?
             </p>
-            <p className="text-[#141414] ml-[8px] font-medium text-[14px] leading-[100%] tracking-[0%] text-center underline decoration-solid decoration-[0%] underline-offset-[25%]">
+            <p
+              className="text-[#141414] ml-[8px] font-medium text-[14px] leading-[100%] tracking-[0%] text-center underline decoration-solid decoration-[0%] underline-offset-[25%] cursor-pointer"
+              onClick={() => {
+                handleClose();
+                onSignUpClick?.();
+              }}
+            >
               Sign Up
             </p>
           </div>

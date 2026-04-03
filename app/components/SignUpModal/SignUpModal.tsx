@@ -5,9 +5,16 @@ import { useEffect, useState } from "react";
 interface SignUpModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
+  onSignInClick?: () => void;
 }
 
-export default function SignUpModal({ isOpen, onClose }: SignUpModalProps) {
+export default function SignUpModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  onSignInClick,
+}: SignUpModalProps) {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -63,7 +70,6 @@ export default function SignUpModal({ isOpen, onClose }: SignUpModalProps) {
     setEmailError("");
     setStep(2);
   };
-
   const handleSignUp = async () => {
     if (!username.trim()) {
       setUsernameError("Username is required.");
@@ -90,18 +96,14 @@ export default function SignUpModal({ isOpen, onClose }: SignUpModalProps) {
         "https://api.redclass.redberryinternship.ge/api/register",
         {
           method: "POST",
-          headers: {
-            Accept: "application/json",
-          },
+          headers: { Accept: "application/json" },
           body: formData,
         },
       );
 
       const rawText = await response.text();
-      console.log("Status:", response.status);
-      console.log("Raw response:", rawText);
-
-      let data: unknown = null;
+      let data: { errors?: { email?: string[]; username?: string[] } } | null =
+        null;
       try {
         data = JSON.parse(rawText);
       } catch {
@@ -109,14 +111,18 @@ export default function SignUpModal({ isOpen, onClose }: SignUpModalProps) {
       }
 
       if (!response.ok) {
-        console.error(
-          "Registration failed — status:",
-          response.status,
-          "body:",
-          data ?? rawText,
-        );
+        if (response.status === 422 && data?.errors) {
+          if (data.errors.email?.[0]) {
+            setStep(1);
+            setEmailError(data.errors.email[0]);
+          }
+          if (data.errors.username?.[0]) {
+            setUsernameError(data.errors.username[0]);
+          }
+        }
       } else {
-        console.log("Register success:", data);
+        handleClose();
+        onSuccess?.();
       }
     } catch (error) {
       console.error("Registration error:", error);
@@ -142,6 +148,7 @@ export default function SignUpModal({ isOpen, onClose }: SignUpModalProps) {
         style={{
           width: "460px",
           height: step === 1 ? "416px" : step === 2 ? "513px" : "623px",
+          transition: "height 0.3s ease",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -193,15 +200,24 @@ export default function SignUpModal({ isOpen, onClose }: SignUpModalProps) {
           <div className="flex items-center justify-between mt-[24px]">
             <div
               className="w-[114px] h-[8px] rounded-[30px]"
-              style={{ backgroundColor: bar1 }}
+              style={{
+                backgroundColor: bar1,
+                transition: "background-color 0.3s ease",
+              }}
             ></div>
             <div
               className="w-[114px] h-[8px] rounded-[30px]"
-              style={{ backgroundColor: bar2 }}
+              style={{
+                backgroundColor: bar2,
+                transition: "background-color 0.3s ease",
+              }}
             ></div>
             <div
               className="w-[114px] h-[8px] rounded-[30px]"
-              style={{ backgroundColor: bar3 }}
+              style={{
+                backgroundColor: bar3,
+                transition: "background-color 0.3s ease",
+              }}
             ></div>
           </div>
 
@@ -250,7 +266,13 @@ export default function SignUpModal({ isOpen, onClose }: SignUpModalProps) {
                 <p className="text-[#666666] font-normal text-[12px] leading-[100%] tracking-[0%] text-center">
                   Already have an account?
                 </p>
-                <p className="text-[#141414] ml-[8px] font-medium text-[14px] leading-[100%] tracking-[0%] text-center underline decoration-solid decoration-[0%] underline-offset-[25%]">
+                <p
+                  className="text-[#141414] ml-[8px] font-medium text-[14px] leading-[100%] tracking-[0%] text-center underline decoration-solid decoration-[0%] underline-offset-[25%] cursor-pointer"
+                  onClick={() => {
+                    handleClose();
+                    onSignInClick?.();
+                  }}
+                >
                   Log In
                 </p>
               </div>
@@ -559,6 +581,7 @@ export default function SignUpModal({ isOpen, onClose }: SignUpModalProps) {
               </div>
               <div className="flex items-center w-[320px] mx-auto mt-[16px] h-[21px]">
                 <div className="flex-1 h-[1px] bg-[#D1D1D1]"></div>
+
                 <span className="px-[8px] text-[14px] font-inter font-medium leading-[100%] tracking-[0%] text-center text-[#8A8A8A]">
                   or
                 </span>
