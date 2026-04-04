@@ -3,7 +3,7 @@ import Logo from "../../../public/images/logo.svg";
 import SocialMedia from "../../../public/images/Social Media.svg";
 function Footer() {
   return (
-    <div className="w-full h-[334px] border-t-[1px] border-t-[#D1D1D1] mt-[24px]">
+    <div className="w-full h-[334px] border-t-[1px] border-t-[#D1D1D1] mt-[162px]">
       <div className="mt-[80px] flex w-[1566px] mx-auto justify-between">
         <div>
           <div className="flex items-center gap-[12px]">

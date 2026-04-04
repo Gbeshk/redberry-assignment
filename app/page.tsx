@@ -11,6 +11,7 @@ import CoursesSection from "./components/CoursesSection/CoursesSection";
 import SignUpModal from "./components/SignUpModal/SignUpModal";
 import SignInModal from "./components/SignInModal/SignInModal";
 import ProfileModal from "./components/ProfileModal/ProfileModal";
+import CurrentCourses from "./components/CurrentCourses/CurrentCourses";
 
 const slides = [
   {
@@ -287,6 +288,7 @@ export default function Home() {
         </div>
       </div>
       <CoursesSection />
+      <CurrentCourses />
       <Footer />
     </>
   );
