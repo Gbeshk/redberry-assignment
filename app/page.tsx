@@ -46,6 +46,7 @@ export default function Home() {
   const isFirst = current === 0;
   const isLast = current === slides.length - 1;
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userData, setUserData] = useState<{ avatar?: string } | null>(null);
 
   return (
     <>
@@ -56,18 +57,31 @@ export default function Home() {
           setShowSignUpModal(false);
           setShowSignInModal(true);
         }}
-        onSignInClick={() => {
-          setShowSignUpModal(false);
-          setShowSignInModal(true);
-        }}
       />
       <SignInModal
         isOpen={showSignInModal}
-        onSuccess={() => setIsLoggedIn(true)}
         onClose={() => setShowSignInModal(false)}
         onSignUpClick={() => {
           setShowSignInModal(false);
           setShowSignUpModal(true);
+        }}
+        onSuccess={async () => {
+          setIsLoggedIn(true);
+          setShowSignInModal(false);
+          try {
+            const token = localStorage.getItem("authToken");
+            const res = await fetch(
+              "https://api.redclass.redberryinternship.ge/api/me",
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  Accept: "application/json",
+                },
+              },
+            );
+            const json = await res.json();
+            setUserData(json.data);
+          } catch (e) {}
         }}
       />
       <ProfileModal
@@ -125,31 +139,41 @@ export default function Home() {
                 onClick={() => setShowProfileModal(true)}
               >
                 <div
-                  className="w-[56px] h-[56px] rounded-full flex items-center justify-center"
+                  className="w-[56px] h-[56px] rounded-full flex items-center justify-center overflow-hidden"
                   style={{ backgroundColor: "#EEEDFC" }}
                 >
-                  <svg
-                    width="38"
-                    height="38"
-                    viewBox="0 0 38 38"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M30.0832 33.25V30.0833C30.0832 28.4036 29.4159 26.7927 28.2282 25.605C27.0404 24.4173 25.4295 23.75 23.7498 23.75H14.2498C12.5701 23.75 10.9592 24.4173 9.77149 25.605C8.58376 26.7927 7.9165 28.4036 7.9165 30.0833V33.25"
-                      stroke="#736BEA"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                  {userData?.avatar ? (
+                    <Image
+                      src={userData.avatar}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                      width={56}
+                      height={56}
                     />
-                    <path
-                      d="M18.9998 17.4167C22.4976 17.4167 25.3332 14.5811 25.3332 11.0833C25.3332 7.58553 22.4976 4.75 18.9998 4.75C15.502 4.75 12.6665 7.58553 12.6665 11.0833C12.6665 14.5811 15.502 17.4167 18.9998 17.4167Z"
-                      stroke="#736BEA"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  ) : (
+                    <svg
+                      width="38"
+                      height="38"
+                      viewBox="0 0 38 38"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M30.0832 33.25V30.0833C30.0832 28.4036 29.4159 26.7927 28.2282 25.605C27.0404 24.4173 25.4295 23.75 23.7498 23.75H14.2498C12.5701 23.75 10.9592 24.4173 9.77149 25.605C8.58376 26.7927 7.9165 28.4036 7.9165 30.0833V33.25"
+                        stroke="#736BEA"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M18.9998 17.4167C22.4976 17.4167 25.3332 14.5811 25.3332 11.0833C25.3332 7.58553 22.4976 4.75 18.9998 4.75C15.502 4.75 12.6665 7.58553 12.6665 11.0833C12.6665 14.5811 15.502 17.4167 18.9998 17.4167Z"
+                        stroke="#736BEA"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
                 </div>
                 <div
                   className="absolute bottom-0 right-0 w-[15px] h-[15px] rounded-full"

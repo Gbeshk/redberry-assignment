@@ -5,7 +5,7 @@ interface SignInModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSignUpClick?: () => void;
-  onSuccess?: () => void; 
+  onSuccess?: () => void | Promise<void>;
 }
 
 export default function SignInModal({
@@ -101,6 +101,8 @@ export default function SignInModal({
         );
       } else {
         console.log("Login success:", data);
+        const token = (data as { data?: { token?: string } })?.data?.token;
+        if (token) localStorage.setItem("authToken", token);
         handleClose();
         onSuccess?.();
       }
@@ -180,7 +182,7 @@ export default function SignInModal({
             <label
               htmlFor="signin-password"
               className="text-sm font-medium"
-              style={{ marginTop: emailError ? "12px" : "24px" }} 
+              style={{ marginTop: emailError ? "12px" : "24px" }}
             >
               Password*
             </label>
