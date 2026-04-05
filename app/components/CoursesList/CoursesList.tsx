@@ -12,24 +12,41 @@ interface Course {
   isFeatured: boolean;
   avgRating: number | null;
   reviewCount: number;
-  category: {
-    id: number;
-    name: string;
-  };
-  topic: {
-    id: number;
-    name: string;
-  };
-  instructor: {
-    id: number;
-    name: string;
-    avatar: string;
-  };
+  category: { id: number; name: string };
+  topic: { id: number; name: string };
+  instructor: { id: number; name: string; avatar: string };
 }
 
-function CoursesList() {
+type SortOption =
+  | "newest"
+  | "price_asc"
+  | "price_desc"
+  | "popular"
+  | "title_az";
+
+const SORT_LABELS: Record<SortOption, string> = {
+  newest: "Newest First",
+  price_asc: "Price: Low to High",
+  price_desc: "Price: High to Low",
+  popular: "Most Popular",
+  title_az: "Title: A-Z",
+};
+
+interface CoursesListProps {
+  selectedCategories: number[];
+  selectedTopics: number[];
+  selectedInstructors: number[];
+}
+
+function CoursesList({
+  selectedCategories,
+  selectedTopics,
+  selectedInstructors,
+}: CoursesListProps) {
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const COURSES_PER_PAGE = 9;
 
@@ -38,7 +55,6 @@ function CoursesList() {
       let page = 1;
       let collected: Course[] = [];
       let hasMore = true;
-
       while (hasMore) {
         const res = await fetch(
           `https://api.redclass.redberryinternship.ge/api/courses?page=${page}`,
@@ -50,17 +66,58 @@ function CoursesList() {
         hasMore = collected.length < total && items.length > 0;
         page++;
       }
-
       setAllCourses(collected);
     };
-
     fetchAll();
   }, []);
 
-  const total = allCourses.length;
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategories, selectedTopics, selectedInstructors]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".sort-dropdown")) setDropdownOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredCourses = allCourses.filter((course) => {
+    const categoryMatch =
+      selectedCategories.length === 0 ||
+      selectedCategories.includes(course.category.id);
+    const topicMatch =
+      selectedTopics.length === 0 || selectedTopics.includes(course.topic.id);
+    const instructorMatch =
+      selectedInstructors.length === 0 ||
+      selectedInstructors.includes(course.instructor.id);
+    return categoryMatch && topicMatch && instructorMatch;
+  });
+
+  const sortedCourses = [...filteredCourses].sort((a, b) => {
+    switch (sortBy) {
+      case "newest":
+        return b.id - a.id;
+      case "price_asc":
+        return parseFloat(a.basePrice) - parseFloat(b.basePrice);
+      case "price_desc":
+        return parseFloat(b.basePrice) - parseFloat(a.basePrice);
+      case "popular":
+        return (b.avgRating ?? 0) - (a.avgRating ?? 0);
+      case "title_az":
+        return a.title.localeCompare(b.title);
+      default:
+        return 0;
+    }
+  });
+
+  const total = sortedCourses.length;
   const totalPages = Math.ceil(total / COURSES_PER_PAGE);
   const start = (currentPage - 1) * COURSES_PER_PAGE;
-  const courses = allCourses.slice(start, start + COURSES_PER_PAGE);
+  const courses = sortedCourses.slice(start, start + COURSES_PER_PAGE);
 
   return (
     <div className="w-[1167px]">
@@ -68,29 +125,56 @@ function CoursesList() {
         <p className="h-[24px] flex items-center justify-center text-[#666666] font-medium text-[16px] leading-[24px]">
           Showing {courses.length} out of {total}
         </p>
-        <div className="px-[20px] py-[7px] rounded-[10px] bg-white h-full flex items-center">
-          <p className="text-[#666666] font-medium text-[16px] leading-[24px] w-[166px]">
-            Sort By:
-            <span className="text-[#4F46E5]"> Newest First</span>
-          </p>
-          <svg
-            className="ml-[8px]"
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
+
+        <div className="relative sort-dropdown">
+          <div
+            className="px-[20px] py-[7px] rounded-[10px] bg-white h-[49px] flex items-center cursor-pointer select-none"
+            onClick={() => setDropdownOpen((prev) => !prev)}
           >
-            <path
-              d="M16.4448 7.50122L11.1506 12.7952C11.0287 12.9171 10.884 13.0138 10.7248 13.0798C10.5655 13.1457 10.3948 13.1797 10.2224 13.1797C10.0501 13.1797 9.87939 13.1457 9.72015 13.0798C9.5609 13.0138 9.4162 12.9171 9.29432 12.7952L4.00032 7.50097"
-              stroke="#666666"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+            <p className="text-[#666666] font-medium text-[16px] leading-[24px] w-[166px]">
+              Sort By:
+              <span className="text-[#4F46E5]"> {SORT_LABELS[sortBy]}</span>
+            </p>
+            <svg
+              className="ml-[8px]"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M16.4448 7.50122L11.1506 12.7952C11.0287 12.9171 10.884 13.0138 10.7248 13.0798C10.5655 13.1457 10.3948 13.1797 10.2224 13.1797C10.0501 13.1797 9.87939 13.1457 9.72015 13.0798C9.5609 13.0138 9.4162 12.9171 9.29432 12.7952L4.00032 7.50097"
+                stroke="#666666"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+
+          {dropdownOpen && (
+            <div className="absolute right-0 top-[54px] w-full bg-white rounded-[10px] shadow-lg z-10 py-[8px]">
+              {(Object.keys(SORT_LABELS) as SortOption[]).map((option) => (
+                <div
+                  key={option}
+                  onClick={() => {
+                    setSortBy(option);
+                    setDropdownOpen(false);
+                    setCurrentPage(1);
+                  }}
+                  className={`px-[20px] py-[10px] text-[16px] font-medium leading-[24px] cursor-pointer hover:bg-[#F5F5F5] whitespace-nowrap ${
+                    sortBy === option ? "text-[#4F46E5]" : "text-[#666666]"
+                  }`}
+                >
+                  {SORT_LABELS[option]}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+
       <div className="w-full mt-[32px] flex flex-wrap gap-[24px]">
         {courses.map((course) => (
           <div
@@ -149,6 +233,19 @@ function CoursesList() {
                 {course.category.name}
               </p>
             </div>
+            <div className="flex items-center justify-between h-[48px] w-full mt-[18px]">
+              <div className="flex flex-col justify-center">
+                <p className="text-[#ADADAD] h-[15px] flex items-center font-medium text-[12px] leading-none tracking-normal">
+                  Starting from
+                </p>
+                <p className="text-[#3D3D3D] font-semibold text-[24px] leading-none tracking-normal h-[29px] flex items-center">
+                  ${course.basePrice}
+                </p>
+              </div>
+              <div className="w-[103px] h-[48px] flex items-center justify-center bg-[#4F46E5] text-white font-medium text-[16px] leading-[24px] tracking-normal rounded-[8px]">
+                Details
+              </div>
+            </div>
           </div>
         ))}
       </div>
@@ -166,11 +263,7 @@ function CoursesList() {
             <button
               key={page}
               onClick={() => setCurrentPage(page)}
-              className={`w-[40px] h-[40px] rounded-[10px] font-medium text-[16px] ${
-                page === currentPage
-                  ? "bg-[#4F46E5] text-white"
-                  : "bg-white text-[#666666]"
-              }`}
+              className={`w-[40px] h-[40px] rounded-[10px] font-medium text-[16px] ${page === currentPage ? "bg-[#4F46E5] text-white" : "bg-white text-[#666666]"}`}
             >
               {page}
             </button>
