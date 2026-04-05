@@ -208,7 +208,6 @@ function Courses() {
             </div>
           </div>
 
-          {/* Categories */}
           <div className="w-[309px] mt-[32px]">
             <p className="h-[22px] flex items-center text-[#666666] font-medium text-[18px] leading-[100%] tracking-[0%]">
               Categories
@@ -236,7 +235,6 @@ function Courses() {
             </div>
           </div>
 
-          {/* Topics */}
           <div className="w-[309px] mt-[56px]">
             <p className="h-[22px] flex items-center text-[#666666] font-medium text-[18px] leading-[100%] tracking-[0%]">
               Topics
@@ -261,7 +259,6 @@ function Courses() {
             </div>
           </div>
 
-          {/* Instructors */}
           <div className="w-[309px] mt-[56px]">
             <p className="h-[22px] flex items-center text-[#666666] font-medium text-[18px] leading-[100%] tracking-[0%]">
               Instructor
@@ -273,7 +270,7 @@ function Courses() {
                   <div
                     key={instructor.id}
                     onClick={() => toggleInstructor(instructor.id)}
-                    className={`px-[12px] py-[8px] rounded-[12px] flex items-center gap-[10px] cursor-pointer transition-colors ${active ? "bg-[#4F46E5]" : "bg-white"}`}
+                    className={`px-[12px] py-[8px] rounded-[12px] flex items-center gap-[12px] cursor-pointer transition-colors ${active ? "bg-[#4F46E5]" : "bg-white"}`}
                   >
                     <Image
                       src={instructor.avatar}

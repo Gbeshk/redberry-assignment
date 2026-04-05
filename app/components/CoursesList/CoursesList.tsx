@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 interface Course {
@@ -47,6 +48,7 @@ function CoursesList({
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const router = useRouter();
 
   const COURSES_PER_PAGE = 9;
 
@@ -179,6 +181,7 @@ function CoursesList({
         {courses.map((course) => (
           <div
             key={course.id}
+            onClick={() => router.push(`/courses/${course.id}`)}
             className="w-[373px] h-[451px] bg-white rounded-[12px] p-[20px] flex flex-col"
           >
             <Image
