@@ -12,7 +12,6 @@ import LocationIcon from "../icons/LocationIcon";
 import WarningIcon from "../icons/WarningIcon";
 import HybridIcon from "../icons/HybridIcon";
 
-// --- Types ---
 interface WeeklySchedule {
   id: number;
   label: string;
@@ -34,8 +33,11 @@ interface SessionType {
   availableSeats: number;
   location?: string;
 }
+interface CourseScheduleProps {
+  courseId: string;
+  onSignInClick: () => void;
+}
 
-// Static definitions — order & labels are fixed in the UI
 const STATIC_SCHEDULES = [
   { key: "mon-wed", label: "Mon - Wed" },
   { key: "tue-thu", label: "Tue - Thu" },
@@ -44,9 +46,24 @@ const STATIC_SCHEDULES = [
 ];
 
 const STATIC_TIME_SLOTS = [
-  { key: "morning", label: "Morning", sublabel: "9:00 AM – 12:00 PM", icon: "morning" },
-  { key: "afternoon", label: "Afternoon", sublabel: "12:00 PM – 6:00 PM", icon: "afternoon" },
-  { key: "evening", label: "Evening", sublabel: "6:00 PM – 9:00 PM", icon: "evening" },
+  {
+    key: "morning",
+    label: "Morning",
+    sublabel: "9:00 AM – 12:00 PM",
+    icon: "morning",
+  },
+  {
+    key: "afternoon",
+    label: "Afternoon",
+    sublabel: "12:00 PM – 6:00 PM",
+    icon: "afternoon",
+  },
+  {
+    key: "evening",
+    label: "Evening",
+    sublabel: "6:00 PM – 9:00 PM",
+    icon: "evening",
+  },
 ];
 
 const STATIC_SESSION_TYPES = [
@@ -56,26 +73,35 @@ const STATIC_SESSION_TYPES = [
 ];
 
 // Matches a static schedule label to an API-returned WeeklySchedule
-function matchSchedule(staticLabel: string, apiSchedules: WeeklySchedule[]): WeeklySchedule | undefined {
+function matchSchedule(
+  staticLabel: string,
+  apiSchedules: WeeklySchedule[],
+): WeeklySchedule | undefined {
   const labelMap: Record<string, string[]> = {
     "Mon - Wed": ["monday - wednesday", "mon - wed"],
     "Tue - Thu": ["tuesday - thursday", "tue - thu"],
     "Wed - Fri": ["wednesday - friday", "wed - fri"],
-    "Weekend": ["weekend only", "weekend"],
+    Weekend: ["weekend only", "weekend"],
   };
   const candidates = labelMap[staticLabel] ?? [staticLabel.toLowerCase()];
   return apiSchedules.find((s) =>
-    candidates.some((c) => s.label.toLowerCase().includes(c))
+    candidates.some((c) => s.label.toLowerCase().includes(c)),
   );
 }
 
 // Matches a static time slot key to an API-returned TimeSlot
-function matchTimeSlot(staticKey: string, apiSlots: TimeSlot[]): TimeSlot | undefined {
+function matchTimeSlot(
+  staticKey: string,
+  apiSlots: TimeSlot[],
+): TimeSlot | undefined {
   return apiSlots.find((s) => s.label.toLowerCase().includes(staticKey));
 }
 
 // Matches a static session key to an API-returned SessionType
-function matchSession(staticKey: string, apiSessions: SessionType[]): SessionType | undefined {
+function matchSession(
+  staticKey: string,
+  apiSessions: SessionType[],
+): SessionType | undefined {
   return apiSessions.find((s) => s.name.toLowerCase() === staticKey);
 }
 
@@ -107,22 +133,38 @@ function sessionLocationLabel(session: SessionType): string {
   return session.location ?? "Chavchavadze St.34";
 }
 
-function CourseScedule({ courseId }: { courseId: string }) {
-  // --- API state ---
+function CourseScedule({ courseId, onSignInClick }: CourseScheduleProps) {  // --- API state ---
   const [weeklySchedules, setWeeklySchedules] = useState<WeeklySchedule[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
 
   // --- Selection state ---
-  const [selectedScheduleKey, setSelectedScheduleKey] = useState<string | null>(null);
-  const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(null);
-  const [selectedTimeSlotKey, setSelectedTimeSlotKey] = useState<string | null>(null);
-  const [selectedTimeSlotId, setSelectedTimeSlotId] = useState<number | null>(null);
-  const [selectedSessionKey, setSelectedSessionKey] = useState<string | null>(null);
+  const [selectedScheduleKey, setSelectedScheduleKey] = useState<string | null>(
+    null,
+  );
+  const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(
+    null,
+  );
+  const [selectedTimeSlotKey, setSelectedTimeSlotKey] = useState<string | null>(
+    null,
+  );
+  const [selectedTimeSlotId, setSelectedTimeSlotId] = useState<number | null>(
+    null,
+  );
+  const [selectedSessionKey, setSelectedSessionKey] = useState<string | null>(
+    null,
+  );
+
+  // --- Open/close state for each section ---
+  const [scheduleOpen, setScheduleOpen] = useState(true);
+  const [timeSlotOpen, setTimeSlotOpen] = useState(false);
+  const [sessionOpen, setSessionOpen] = useState(false);
 
   // --- Fetch weekly schedules on mount ---
   useEffect(() => {
-    fetch(`https://api.redclass.redberryinternship.ge/api/courses/${courseId}/weekly-schedules`)
+    fetch(
+      `https://api.redclass.redberryinternship.ge/api/courses/${courseId}/weekly-schedules`,
+    )
       .then((r) => r.json())
       .then((json) => setWeeklySchedules(json.data ?? []))
       .catch(() => {});
@@ -139,7 +181,7 @@ function CourseScedule({ courseId }: { courseId: string }) {
       return;
     }
     fetch(
-      `https://api.redclass.redberryinternship.ge/api/courses/${courseId}/time-slots?weekly_schedule_id=${selectedScheduleId}`
+      `https://api.redclass.redberryinternship.ge/api/courses/${courseId}/time-slots?weekly_schedule_id=${selectedScheduleId}`,
     )
       .then((r) => r.json())
       .then((json) => setTimeSlots(json.data ?? []))
@@ -154,7 +196,7 @@ function CourseScedule({ courseId }: { courseId: string }) {
       return;
     }
     fetch(
-      `https://api.redclass.redberryinternship.ge/api/courses/${courseId}/session-types?weekly_schedule_id=${selectedScheduleId}&time_slot_id=${selectedTimeSlotId}`
+      `https://api.redclass.redberryinternship.ge/api/courses/${courseId}/session-types?weekly_schedule_id=${selectedScheduleId}&time_slot_id=${selectedTimeSlotId}`,
     )
       .then((r) => r.json())
       .then((json) => setSessionTypes(json.data ?? []))
@@ -175,6 +217,8 @@ function CourseScedule({ courseId }: { courseId: string }) {
       setSelectedTimeSlotKey(null);
       setSelectedTimeSlotId(null);
       setSelectedSessionKey(null);
+      setTimeSlotOpen(true);
+      setSessionOpen(false);
     }
   }
 
@@ -189,6 +233,7 @@ function CourseScedule({ courseId }: { courseId: string }) {
       setSelectedTimeSlotKey(staticKey);
       setSelectedTimeSlotId(match.id);
       setSelectedSessionKey(null);
+      setSessionOpen(true);
     }
   }
 
@@ -215,14 +260,31 @@ function CourseScedule({ courseId }: { courseId: string }) {
   }
 
   // --- Price calculation ---
-  const selectedSession =
-    selectedSessionKey ? matchSession(selectedSessionKey, sessionTypes) : null;
-  const sessionMod = selectedSession ? parseFloat(selectedSession.priceModifier) : 0;
+  const selectedSession = selectedSessionKey
+    ? matchSession(selectedSessionKey, sessionTypes)
+    : null;
+  const sessionMod = selectedSession
+    ? parseFloat(selectedSession.priceModifier)
+    : 0;
   const basePrice = 349;
   const totalPrice = basePrice + sessionMod;
 
-  const showTimeSlots = selectedScheduleId !== null;
-  const showSessionTypes = selectedTimeSlotId !== null;
+  const showTimeSlots = selectedScheduleId !== null && timeSlotOpen;
+  const showSessionTypes = selectedTimeSlotId !== null && sessionOpen;
+
+  function handleToggleSchedule() {
+    setScheduleOpen((o) => !o);
+  }
+
+  function handleToggleTimeSlot() {
+    if (selectedScheduleId === null) return; // gate: must pick a day first
+    setTimeSlotOpen((o) => !o);
+  }
+
+  function handleToggleSession() {
+    if (selectedTimeSlotId === null) return; // gate: must pick a time slot first
+    setSessionOpen((o) => !o);
+  }
 
   // --- Schedule div styles ---
   function scheduleStyle(staticLabel: string) {
@@ -231,16 +293,19 @@ function CourseScedule({ courseId }: { courseId: string }) {
 
     if (!available) {
       return {
-        container: "text-[#D1D1D1] h-full font-semibold text-[16px] leading-none tracking-normal text-centerh-full border-[1px] border-[#D1D1D1] rounded-[12px] flex items-center justify-center bg-[#F5F5F5] w-full cursor-default",
+        container:
+          "text-[#D1D1D1] h-full font-semibold text-[16px] leading-none tracking-normal text-centerh-full border-[1px] border-[#D1D1D1] rounded-[12px] flex items-center justify-center bg-[#F5F5F5] w-full cursor-default",
       };
     }
     if (selected) {
       return {
-        container: "text-[#130E67] h-full font-semibold text-[16px] leading-none tracking-normal text-centerh-full border-[2px] border-[#736BEA] rounded-[12px] flex items-center justify-center bg-white w-full cursor-pointer",
+        container:
+          "text-[#130E67] h-full font-semibold text-[16px] leading-none tracking-normal text-centerh-full border-[2px] border-[#736BEA] rounded-[12px] flex items-center justify-center bg-white w-full cursor-pointer",
       };
     }
     return {
-      container: "text-[#292929] h-full font-semibold text-[16px] leading-none tracking-normal text-centerh-full border-[1px] border-[#D1D1D1] rounded-[12px] flex items-center justify-center bg-white w-full cursor-pointer",
+      container:
+        "text-[#292929] h-full font-semibold text-[16px] leading-none tracking-normal text-centerh-full border-[1px] border-[#D1D1D1] rounded-[12px] flex items-center justify-center bg-white w-full cursor-pointer",
     };
   }
 
@@ -293,14 +358,24 @@ function CourseScedule({ courseId }: { courseId: string }) {
   };
 
   const STATIC_SESSION_SEATS: Record<string, React.ReactNode> = {
-    online: <p className="text-[#3D3D3D] font-medium text-[12px] leading-none tracking-normal">50 Seats Available</p>,
+    online: (
+      <p className="text-[#3D3D3D] font-medium text-[12px] leading-none tracking-normal">
+        50 Seats Available
+      </p>
+    ),
     in_person: (
       <div className="flex items-center gap-[4px]">
         <WarningIcon />
-        <p className="font-medium text-[12px] text-[#F4A316] leading-none tracking-normal">Only 3 Seats Remaining</p>
+        <p className="font-medium text-[12px] text-[#F4A316] leading-none tracking-normal">
+          Only 3 Seats Remaining
+        </p>
       </div>
     ),
-    hybrid: <p className="text-[#3D3D3D] font-medium text-[12px] leading-none tracking-normal">50 Seats Available</p>,
+    hybrid: (
+      <p className="text-[#3D3D3D] font-medium text-[12px] leading-none tracking-normal">
+        50 Seats Available
+      </p>
+    ),
   };
 
   const STATIC_SESSION_LOCATIONS: Record<string, string> = {
@@ -325,45 +400,128 @@ function CourseScedule({ courseId }: { courseId: string }) {
     if (apiSession) return sessionLocationLabel(apiSession);
     return STATIC_SESSION_LOCATIONS[staticKey] ?? "Chavchavadze St.34";
   }
+  const [enrolling, setEnrolling] = useState(false);
+  const [conflictData, setConflictData] = useState<{
+    message: string;
+    conflicts: {
+      requestedCourseId: number;
+      conflictingEnrollmentId: number;
+      conflictingCourseName: string;
+      schedule: string;
+    }[];
+  } | null>(null);
+  async function handleEnroll(force = false) {
+    if (!selectedSessionKey || !isSessionAvailable(selectedSessionKey)) return;
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      onSignInClick();
+      return;
+    }
+
+    const selectedSession = matchSession(selectedSessionKey, sessionTypes);
+    if (!selectedSession) return;
+
+    setEnrolling(true);
+    try {
+      const res = await fetch(
+        "https://api.redclass.redberryinternship.ge/api/enrollments",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            courseId: Number(courseId),
+            courseScheduleId: selectedSession.courseScheduleId,
+            force,
+          }),
+        },
+      );
+
+      if (res.status === 401) {
+        onSignInClick();
+        return;
+      }
+
+      if (res.status === 409) {
+        const json = await res.json();
+        setConflictData(json);
+        return;
+      }
+
+      if (res.status === 201) {
+        // success — handle however you like (redirect, toast, etc.)
+        alert("Enrolled successfully!");
+        return;
+      }
+    } finally {
+      setEnrolling(false);
+    }
+  }
 
   return (
     <>
       <div className="w-[530px]">
         {/* Weekly Schedule */}
         <div className="w-[530px]">
-          <div className="h-[30px] flex items-center justify-between">
+          <div
+            className="h-[30px] flex items-center justify-between cursor-pointer"
+            onClick={handleToggleSchedule}
+          >
             <div className="flex items-center gap-[8px]">
               <WeeklyScheduleIcon />
               <p className="text-[#130E67] font-semibold text-[24px] leading-none tracking-normal">
                 Weekly Schedule
               </p>
             </div>
-            <ArrowIcon />
+            <div
+              style={{
+                transform: scheduleOpen ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.2s ease",
+              }}
+            >
+              <ArrowIcon />
+            </div>
           </div>
 
-          <div className="w-full h-[91px] mt-[18px] flex items-center justify-between gap-[12px]">
-            {STATIC_SCHEDULES.map(({ key, label }) => (
-              <div
-                key={key}
-                className={scheduleStyle(label).container}
-                onClick={() => handleScheduleClick(label)}
-              >
-                {label}
-              </div>
-            ))}
-          </div>
+          {scheduleOpen && (
+            <div className="w-full h-[91px] mt-[18px] flex items-center justify-between gap-[12px]">
+              {STATIC_SCHEDULES.map(({ key, label }) => (
+                <div
+                  key={key}
+                  className={scheduleStyle(label).container}
+                  onClick={() => handleScheduleClick(label)}
+                >
+                  {label}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Time Slot */}
         <div className="w-[530px] mt-[32px]">
-          <div className="h-[29px] flex items-center justify-between">
+          <div
+            className={`h-[29px] flex items-center justify-between ${selectedScheduleId !== null ? "cursor-pointer" : "cursor-default"}`}
+            onClick={handleToggleTimeSlot}
+          >
             <div className="flex items-center gap-[8px]">
               <TimeSlotIcon />
               <p className="text-[#8A8A8A] font-semibold text-[24px] leading-none tracking-normal">
                 Time Slot
               </p>
             </div>
-            <ArrowIcon />
+            <div
+              style={{
+                transform: timeSlotOpen ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.2s ease",
+              }}
+            >
+              <ArrowIcon />
+            </div>
           </div>
 
           {showTimeSlots && (
@@ -375,10 +533,16 @@ function CourseScedule({ courseId }: { courseId: string }) {
               >
                 <MorningIcon />
                 <div className="flex flex-col h-[31px] justify-center gap-[2px]">
-                  <p className="h-[17px] flex items-center font-medium text-[14px] leading-none tracking-normal" style={{ color: timeSlotTextColor("morning") }}>
+                  <p
+                    className="h-[17px] flex items-center font-medium text-[14px] leading-none tracking-normal"
+                    style={{ color: timeSlotTextColor("morning") }}
+                  >
                     Morning
                   </p>
-                  <p className="h-[12px] flex items-center font-normal text-[10px] leading-none tracking-normal" style={{ color: timeSlotTextColor("morning") }}>
+                  <p
+                    className="h-[12px] flex items-center font-normal text-[10px] leading-none tracking-normal"
+                    style={{ color: timeSlotTextColor("morning") }}
+                  >
                     9:00 AM – 12:00 PM
                   </p>
                 </div>
@@ -391,10 +555,16 @@ function CourseScedule({ courseId }: { courseId: string }) {
               >
                 <AfternoonIcon />
                 <div className="flex flex-col h-[31px] justify-center gap-[2px]">
-                  <p className="h-[17px] flex items-center font-medium text-[14px] leading-none tracking-normal" style={{ color: timeSlotTextColor("afternoon") }}>
+                  <p
+                    className="h-[17px] flex items-center font-medium text-[14px] leading-none tracking-normal"
+                    style={{ color: timeSlotTextColor("afternoon") }}
+                  >
                     Afternoon
                   </p>
-                  <p className="h-[12px] flex items-center font-normal text-[10px] leading-none tracking-normal" style={{ color: timeSlotTextColor("afternoon") }}>
+                  <p
+                    className="h-[12px] flex items-center font-normal text-[10px] leading-none tracking-normal"
+                    style={{ color: timeSlotTextColor("afternoon") }}
+                  >
                     12:00 PM – 6:00 PM
                   </p>
                 </div>
@@ -407,10 +577,16 @@ function CourseScedule({ courseId }: { courseId: string }) {
               >
                 <EveningIcon />
                 <div className="flex flex-col h-[31px] gap-[2px]">
-                  <p className="h-[17px] flex items-center font-medium text-[14px] leading-none tracking-normal" style={{ color: timeSlotTextColor("evening") }}>
+                  <p
+                    className="h-[17px] flex items-center font-medium text-[14px] leading-none tracking-normal"
+                    style={{ color: timeSlotTextColor("evening") }}
+                  >
                     Evening
                   </p>
-                  <p className="h-[12px] flex items-center font-normal text-[10px] leading-none tracking-normal" style={{ color: timeSlotTextColor("evening") }}>
+                  <p
+                    className="h-[12px] flex items-center font-normal text-[10px] leading-none tracking-normal"
+                    style={{ color: timeSlotTextColor("evening") }}
+                  >
                     6:00 PM – 9:00 PM
                   </p>
                 </div>
@@ -421,14 +597,24 @@ function CourseScedule({ courseId }: { courseId: string }) {
 
         {/* Session Type */}
         <div className="w-[530px] mt-[32px]">
-          <div className="h-[29px] flex items-center justify-between">
+          <div
+            className={`h-[29px] flex items-center justify-between ${selectedTimeSlotId !== null ? "cursor-pointer" : "cursor-default"}`}
+            onClick={handleToggleSession}
+          >
             <div className="flex items-center gap-[8px]">
               <SessionIcon />
               <p className="text-[#8A8A8A] font-semibold text-[24px] leading-none tracking-normal">
                 Session Type
               </p>
             </div>
-            <ArrowIcon />
+            <div
+              style={{
+                transform: sessionOpen ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.2s ease",
+              }}
+            >
+              <ArrowIcon />
+            </div>
           </div>
 
           {showSessionTypes && (
@@ -440,13 +626,22 @@ function CourseScedule({ courseId }: { courseId: string }) {
                   onClick={() => handleSessionClick("online")}
                 >
                   <OnlineIcon />
-                  <p className="font-semibold text-[16px] leading-none tracking-normal text-center h-[19px] flex items-center mt-[6px]" style={{ color: sessionTextColor("online") }}>
+                  <p
+                    className="font-semibold text-[16px] leading-none tracking-normal text-center h-[19px] flex items-center mt-[6px]"
+                    style={{ color: sessionTextColor("online") }}
+                  >
                     Online
                   </p>
-                  <p className="h-[15px] flex items-center mt-[6px] font-normal text-[12px] leading-none tracking-normal" style={{ color: sessionTextColor("online") }}>
+                  <p
+                    className="h-[15px] flex items-center mt-[6px] font-normal text-[12px] leading-none tracking-normal"
+                    style={{ color: sessionTextColor("online") }}
+                  >
                     Google Meet
                   </p>
-                  <p className="h-[17px] flex items-center mt-[12px] font-medium text-[14px] leading-none tracking-normal" style={{ color: sessionPriceColor("online") }}>
+                  <p
+                    className="h-[17px] flex items-center mt-[12px] font-medium text-[14px] leading-none tracking-normal"
+                    style={{ color: sessionPriceColor("online") }}
+                  >
                     {getSessionPriceLabel("online")}
                   </p>
                 </div>
@@ -460,16 +655,25 @@ function CourseScedule({ courseId }: { courseId: string }) {
                   onClick={() => handleSessionClick("in_person")}
                 >
                   <InPersonIcon />
-                  <p className="font-semibold text-[16px] leading-none tracking-normal text-center h-[19px] flex items-center mt-[6px]" style={{ color: sessionTextColor("in_person") }}>
+                  <p
+                    className="font-semibold text-[16px] leading-none tracking-normal text-center h-[19px] flex items-center mt-[6px]"
+                    style={{ color: sessionTextColor("in_person") }}
+                  >
                     In-Person
                   </p>
                   <div className="flex h-[15px] items-center mt-[6px] gap-[2px] overflow-hidden">
                     <LocationIcon />
-                    <p className="flex items-center font-normal text-[12px] leading-none tracking-normal truncate whitespace-nowrap" style={{ color: sessionTextColor("in_person") }}>
+                    <p
+                      className="flex items-center font-normal text-[12px] leading-none tracking-normal truncate whitespace-nowrap"
+                      style={{ color: sessionTextColor("in_person") }}
+                    >
                       {getSessionLocation("in_person")}
                     </p>
                   </div>
-                  <p className="h-[17px] flex items-center mt-[12px] font-medium text-[14px] leading-none tracking-normal" style={{ color: sessionPriceColor("in_person") }}>
+                  <p
+                    className="h-[17px] flex items-center mt-[12px] font-medium text-[14px] leading-none tracking-normal"
+                    style={{ color: sessionPriceColor("in_person") }}
+                  >
                     {getSessionPriceLabel("in_person")}
                   </p>
                 </div>
@@ -483,16 +687,25 @@ function CourseScedule({ courseId }: { courseId: string }) {
                   onClick={() => handleSessionClick("hybrid")}
                 >
                   <HybridIcon />
-                  <p className="font-semibold text-[16px] leading-none tracking-normal text-center h-[19px] flex items-center mt-[6px]" style={{ color: sessionTextColor("hybrid") }}>
+                  <p
+                    className="font-semibold text-[16px] leading-none tracking-normal text-center h-[19px] flex items-center mt-[6px]"
+                    style={{ color: sessionTextColor("hybrid") }}
+                  >
                     Hybrid
                   </p>
                   <div className="flex h-[15px] items-center mt-[6px] gap-[2px] overflow-hidden">
                     <LocationIcon />
-                    <p className="flex items-center font-normal text-[12px] leading-none tracking-normal truncate whitespace-nowrap" style={{ color: sessionTextColor("hybrid") }}>
+                    <p
+                      className="flex items-center font-normal text-[12px] leading-none tracking-normal truncate whitespace-nowrap"
+                      style={{ color: sessionTextColor("hybrid") }}
+                    >
                       {getSessionLocation("hybrid")}
                     </p>
                   </div>
-                  <p className="h-[17px] flex items-center mt-[12px] font-medium text-[14px] leading-none tracking-normal" style={{ color: sessionPriceColor("hybrid") }}>
+                  <p
+                    className="h-[17px] flex items-center mt-[12px] font-medium text-[14px] leading-none tracking-normal"
+                    style={{ color: sessionPriceColor("hybrid") }}
+                  >
                     {getSessionPriceLabel("hybrid")}
                   </p>
                 </div>
@@ -533,15 +746,62 @@ function CourseScedule({ courseId }: { courseId: string }) {
           <div
             className="w-[450px] h-[63px] rounded-[12px] mt-[32px] font-semibold text-[20px] leading-[24px] tracking-normal flex items-center justify-center cursor-pointer"
             style={
-              selectedSessionKey && isSessionAvailable(selectedSessionKey)
+              selectedSessionKey &&
+              isSessionAvailable(selectedSessionKey) &&
+              !enrolling
                 ? { backgroundColor: "#736BEA", color: "#ffffff" }
                 : { backgroundColor: "#EEEDFC", color: "#B7B3F4" }
             }
+            onClick={() => handleEnroll(false)}
           >
-            Enroll Now
+            {enrolling ? "Enrolling..." : "Enroll Now"}
           </div>
         </div>
       </div>
+      {conflictData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-[16px] p-[40px] w-[520px] flex flex-col gap-[24px]">
+            <p className="text-[#130E67] font-semibold text-[22px] leading-snug">
+              Schedule Conflict Detected
+            </p>
+            <p className="text-[#525252] text-[16px]">
+              This course conflicts with an existing enrollment:
+            </p>
+            <div className="flex flex-col gap-[12px]">
+              {conflictData.conflicts.map((c, i) => (
+                <div key={i} className="bg-[#F5F5F5] rounded-[12px] p-[16px]">
+                  <p className="text-[#292929] font-semibold text-[15px]">
+                    {c.conflictingCourseName}
+                  </p>
+                  <p className="text-[#8A8A8A] text-[13px] mt-[4px]">
+                    {c.schedule}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p className="text-[#525252] text-[14px]">
+              Do you want to enroll anyway and override the conflict?
+            </p>
+            <div className="flex gap-[12px]">
+              <button
+                className="flex-1 h-[52px] rounded-[12px] border-[2px] border-[#736BEA] text-[#736BEA] font-semibold text-[16px] cursor-pointer"
+                onClick={() => setConflictData(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="flex-1 h-[52px] rounded-[12px] bg-[#736BEA] text-white font-semibold text-[16px] cursor-pointer"
+                onClick={async () => {
+                  setConflictData(null);
+                  await handleEnroll(true);
+                }}
+              >
+                Enroll Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
