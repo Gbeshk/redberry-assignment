@@ -274,8 +274,8 @@ export default function CourseDetailPage() {
             {course.description}
           </p>
         </div>
-        <CourseScedule courseId={id as string} />
-      </div>
+        <CourseScedule courseId={id as string} onSignInClick={() => {}} />
+      </div> 
     </div>
   );
 }
