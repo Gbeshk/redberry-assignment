@@ -22,6 +22,25 @@ export default function ClientLayout({
   } | null>(null);
   const [showEnrolledDrawer, setShowEnrolledDrawer] = useState(false);
 
+  const refreshUser = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+      const res = await fetch(
+        "https://api.redclass.redberryinternship.ge/api/me",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        },
+      );
+      const json = await res.json();
+      setUserData(json.data);
+      localStorage.setItem("userData", JSON.stringify(json.data));
+    } catch (e) {}
+  };
+
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     const storedUser = localStorage.getItem("userData");
@@ -32,6 +51,7 @@ export default function ClientLayout({
       }
     }
   }, []);
+
   return (
     <>
       <SignUpModal
@@ -56,26 +76,13 @@ export default function ClientLayout({
         onSuccess={async () => {
           setIsLoggedIn(true);
           setShowSignInModal(false);
-          try {
-            const token = localStorage.getItem("authToken");
-            const res = await fetch(
-              "https://api.redclass.redberryinternship.ge/api/me",
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  Accept: "application/json",
-                },
-              },
-            );
-            const json = await res.json();
-            setUserData(json.data);
-            localStorage.setItem("userData", JSON.stringify(json.data));
-          } catch (e) {}
+          await refreshUser();
         }}
       />
       <ProfileModal
         isOpen={showProfileModal}
         onClose={() => setShowProfileModal(false)}
+        onProfileUpdated={refreshUser}
       />
       <Header
         isLoggedIn={isLoggedIn}

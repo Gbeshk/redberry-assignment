@@ -4,9 +4,14 @@ import { useEffect, useState } from "react";
 interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onProfileUpdated?: () => void;
 }
 
-export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
+export default function ProfileModal({
+  isOpen,
+  onClose,
+  onProfileUpdated,
+}: ProfileModalProps) {
   const [mobileNumber, setMobileNumber] = useState("");
   const [age, setAge] = useState("");
   const [isAgeOpen, setIsAgeOpen] = useState(false);
@@ -99,6 +104,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         setProfileComplete(u.profileComplete ?? false);
         setAvatarFile(null);
         setAvatarPreview(null);
+        onProfileUpdated?.();
         onClose();
       }
     } catch (e) {

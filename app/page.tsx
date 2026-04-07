@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import CoursesSection from "./components/CoursesSection/CoursesSection";
 import SignUpModal from "./components/SignUpModal/SignUpModal";
@@ -11,11 +11,36 @@ import HeroSlider from "./components/HeroSlider/HeroSlider";
 export default function Home() {
   const [showSignUpModal, setShowSignUpModal] = useState(false);
   const [showSignInModal, setShowSignInModal] = useState(false);
-
   const [showProfileModal, setShowProfileModal] = useState(false);
-
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState<{ avatar?: string } | null>(null);
+
+  useEffect(() => {
+    // Check if user is logged in on initial load
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      setIsLoggedIn(true);
+      fetchUserData(token);
+    }
+  }, []);
+
+  const fetchUserData = async (token: string) => {
+    try {
+      const res = await fetch(
+        "https://api.redclass.redberryinternship.ge/api/me",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        }
+      );
+      const json = await res.json();
+      setUserData(json.data);
+    } catch (error) {
+      console.error("Failed to fetch user data:", error);
+    }
+  };
 
   return (
     <>
@@ -37,20 +62,10 @@ export default function Home() {
         onSuccess={async () => {
           setIsLoggedIn(true);
           setShowSignInModal(false);
-          try {
-            const token = localStorage.getItem("authToken");
-            const res = await fetch(
-              "https://api.redclass.redberryinternship.ge/api/me",
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  Accept: "application/json",
-                },
-              },
-            );
-            const json = await res.json();
-            setUserData(json.data);
-          } catch (e) {}
+          const token = localStorage.getItem("authToken");
+          if (token) {
+            await fetchUserData(token);
+          }
         }}
       />
       <ProfileModal
@@ -59,8 +74,8 @@ export default function Home() {
       />
 
       <HeroSlider />
+      {isLoggedIn ? <CurrentCourses /> : null}
       <CoursesSection />
-      <CurrentCourses />
     </>
   );
 }
