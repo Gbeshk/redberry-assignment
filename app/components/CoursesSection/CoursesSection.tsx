@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import StarIcon from "../icons/StarIcon";
+import { useRouter } from "next/navigation";
 
 type Category = {
   id: number;
@@ -39,8 +41,9 @@ type ApiResponse = {
 };
 
 function CourseCard({ course }: { course: Course }) {
+  const router = useRouter();
   return (
-    <div className="w-[506px] h-[576px] bg-white rounded-[12px] p-[20px] flex flex-col">
+    <div className="w-[506px] h-[576px] bg-white rounded-[12px] p-[20px] flex flex-col relative">
       <Image
         src={course.image}
         alt={course.title}
@@ -57,23 +60,16 @@ function CourseCard({ course }: { course: Course }) {
             {course.instructor.name}
           </p>
         </div>
-        <div className="flex items-center gap-[6px]">
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 15 15"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M9.57416 3.63283C9.71586 3.93472 9.99872 4.1461 10.3284 4.19646L13.6173 4.69892C14.4219 4.82184 14.7504 5.80322 14.182 6.3858L11.7402 8.88844C11.5186 9.11561 11.418 9.43451 11.469 9.74776L12.0368 13.2292C12.1712 14.053 11.2967 14.6692 10.5662 14.2654L7.71728 12.6909C7.41623 12.5245 7.0508 12.5245 6.74977 12.6909L3.90194 14.2651C3.17138 14.669 2.29682 14.0529 2.43119 13.229L2.99894 9.74783C3.05004 9.43454 2.94936 9.1156 2.72766 8.88843L0.285393 6.38588C-0.283136 5.80332 0.0454 4.82183 0.850072 4.69892L4.13951 4.19646C4.46923 4.1461 4.75213 3.93466 4.89381 3.6327L6.32838 0.57523C6.68822 -0.191682 7.77897 -0.191761 8.13892 0.575099L9.57416 3.63283Z"
-              fill="#F4A316"
-            />
-          </svg>
-          <p>{course.avgRating}</p>
-        </div>
+        {course.avgRating && (
+          <div className="flex items-center gap-[6px] h-[18px]">
+            <StarIcon />
+            <p className="text-[#525252] font-medium text-[14px] leading-[100%] tracking-normal">
+              {course.avgRating}
+            </p>
+          </div>
+        )}
       </div>
-      <h1 className="text-[#141414] mt-[12px] font-semibold text-[24px]/none tracking-normal w-[240px] line-clamp-2">
+      <h1 className="text-[#141414] mt-[12px] font-semibold text-[24px]  leading-[120%]  tracking-normal flex items-center  h-[58px]">
         {course.title}
       </h1>
       <p className="text-[#666666] font-medium text-[16px] leading-[24px] tracking-normal mt-[16px] line-clamp-3">
@@ -88,7 +84,12 @@ function CourseCard({ course }: { course: Course }) {
             ${course.basePrice}
           </p>
         </div>
-        <div className="w-[116px] h-[58px] bg-[#4F46E5] flex items-center justify-center rounded-[8px] font-medium text-[20px] leading-none tracking-normal text-white">
+        <div
+          onClick={() => {
+            router.push(`/courses/${course.id}`);
+          }}
+          className="w-[116px] h-[58px] bg-[#4F46E5] cursor-pointer flex items-center justify-center rounded-[8px] font-medium text-[20px] leading-none tracking-normal text-white"
+        >
           Details
         </div>
       </div>
@@ -119,14 +120,13 @@ export default function CoursesSection() {
 
   return (
     <div className="w-[1566px] mx-auto mt-[64px]">
-      <h1 className="text-[#0A0A0A] font-semibold text-[40px] leading-none">
+      <h1 className="text-[#0A0A0A] font-semibold text-[40px] leading-[40px] tracking-[0px]">
         Start Learning Today
       </h1>
 
-      <p className="text-[#3D3D3D] font-medium text-[18px] leading-none mt-[8px]">
+      <p className="text-[#3D3D3D] font-medium text-[18px] leading-[18px] tracking-[0px] mt-[8px]">
         Choose from our most popular courses and begin your journey
       </p>
-
       <div className="flex items-center justify-between mt-[32px]">
         {courses.slice(0, 3).map((course) => (
           <CourseCard key={course.id} course={course} />

@@ -16,7 +16,10 @@ export default function ClientLayout({
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userData, setUserData] = useState<{ avatar?: string } | null>(null);
+  const [userData, setUserData] = useState<{
+    avatar?: string;
+    profileComplete?: boolean;
+  } | null>(null);
   const [showEnrolledDrawer, setShowEnrolledDrawer] = useState(false);
 
   useEffect(() => {
@@ -80,7 +83,8 @@ export default function ClientLayout({
         onSignInClick={() => setShowSignInModal(true)}
         onSignUpClick={() => setShowSignUpModal(true)}
         onProfileClick={() => setShowProfileModal(true)}
-        onEnrolledCoursesClick={() => setShowEnrolledDrawer(true)} // 👈 add this
+        onEnrolledCoursesClick={() => setShowEnrolledDrawer(true)}
+        profileCompleted={userData?.profileComplete}
       />
       <EnrolledCoursesDrawer
         isOpen={showEnrolledDrawer}
