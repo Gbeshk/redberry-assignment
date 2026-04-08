@@ -33,7 +33,7 @@ export default function Home() {
             Authorization: `Bearer ${token}`,
             Accept: "application/json",
           },
-        }
+        },
       );
       const json = await res.json();
       setUserData(json.data);
@@ -74,8 +74,12 @@ export default function Home() {
       />
 
       <HeroSlider />
-      {isLoggedIn ? <CurrentCourses /> : null}
-      <CoursesSection />
+      <div
+        className={`flex ${isLoggedIn ? "flex-col-reverse" : "flex-col"}`}
+      >
+        <CoursesSection />
+        <CurrentCourses />
+      </div>
     </>
   );
 }

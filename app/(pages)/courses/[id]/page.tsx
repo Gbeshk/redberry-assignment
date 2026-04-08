@@ -121,6 +121,7 @@ export default function CourseDetailPage() {
         const courseData = Array.isArray(data.data) ? data.data[0] : data.data;
 
         setCourse(courseData);
+        console.log(courseData);
       });
   }, [id]);
 
@@ -275,7 +276,7 @@ export default function CourseDetailPage() {
           </p>
         </div>
         <CourseScedule courseId={id as string} onSignInClick={() => {}} />
-      </div> 
+      </div>
     </div>
   );
 }

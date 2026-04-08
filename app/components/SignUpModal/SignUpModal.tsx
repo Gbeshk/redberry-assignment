@@ -14,6 +14,92 @@ interface SignUpModalProps {
   onSignInClick?: () => void;
 }
 
+const MODAL_HEIGHTS: Record<number, string> = {
+  1: "416px",
+  2: "513px",
+  3: "623px",
+};
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const inputClass = (hasError: boolean) =>
+  `w-full mt-[8px] border-[1.5px] h-[48px] rounded-[8px] pl-[13px] pr-[15px] py-[12px] text-[14px] font-inter font-medium leading-[100%] tracking-[0%] focus:outline-none focus:ring-0 caret-[#8A8A8A] ${
+    hasError
+      ? "border-[#F4161A] text-[#F4161A] placeholder:text-[#8A8A8A]"
+      : "border-[#D1D1D1] text-[#3D3D3D] placeholder:text-[#8A8A8A] focus:border-[#8A8A8A]"
+  }`;
+
+const labelClass = (hasError: boolean) =>
+  `mt-[24px] text-sm font-medium h-[17px] flex items-center${hasError ? " text-[#F4161A]" : ""}`;
+
+const iconColor = (hasError: boolean) => (hasError ? "#F4161A" : "#ADADAD");
+
+const formatFileSize = (bytes: number) =>
+  bytes < 1024 * 1024
+    ? `${(bytes / 1024).toFixed(1)} KB`
+    : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+
+function ErrorMessage({ msg }: { msg: string }) {
+  return (
+    <p className="error-message mt-[4px] text-[12px] font-normal leading-none tracking-normal h-[17px] flex items-center text-[#F4161A]">
+      {msg}
+    </p>
+  );
+}
+
+function OrDivider() {
+  return (
+    <div className="flex items-center w-[320px] mx-auto mt-[16px] h-[21px]">
+      <div className="flex-1 h-[1px] bg-[#D1D1D1]" />
+      <span className="px-[8px] text-[14px] font-inter font-medium leading-[100%] tracking-[0%] text-center text-[#8A8A8A]">
+        or
+      </span>
+      <div className="flex-1 h-[1px] bg-[#D1D1D1]" />
+    </div>
+  );
+}
+
+function LogInRow({ onClick }: { onClick: () => void }) {
+  return (
+    <div className="flex items-center justify-center mt-[8px]">
+      <p className="text-[#666666] font-normal text-[12px] leading-[100%] tracking-[0%] text-center">
+        Already have an account?
+      </p>
+      <p
+        className="text-[#141414] ml-[8px] decoration-skip-ink-auto font-medium text-[14px] leading-[100%] tracking-[0%] text-center underline decoration-solid decoration-[0%] underline-offset-[25%] cursor-pointer"
+        onClick={onClick}
+      >
+        Log In
+      </p>
+    </div>
+  );
+}
+
+function ProgressBars({ step }: { step: number }) {
+  const colors = [
+    step === 1 ? "#B7B3F4" : "#4F46E5",
+    step === 1 ? "#EEEDFC" : step === 2 ? "#B7B3F4" : "#4F46E5",
+    step <= 2 ? "#EEEDFC" : step === 3 ? "#B7B3F4" : "#4F46E5",
+  ];
+
+  return (
+    <div className="flex items-center w-full justify-between mt-[24px]">
+      {colors.map((color, i) => (
+        <div
+          key={i}
+          className="w-[114px] h-[8px] rounded-[30px]"
+          style={{
+            backgroundColor: color,
+            transition: "background-color 0.3s ease",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 export default function SignUpModal({
   isOpen,
   onClose,
@@ -35,11 +121,7 @@ export default function SignUpModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = isOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
@@ -63,28 +145,29 @@ export default function SignUpModal({
   };
 
   const handleNext = () => {
-    if (!email.trim()) {
-      setEmailError("Email is required.");
-      return;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setEmailError("Please enter a valid email address.");
-      return;
-    }
+    if (!email.trim()) return setEmailError("Email is required.");
+    if (!EMAIL_REGEX.test(email))
+      return setEmailError("Please enter a valid email address.");
     setEmailError("");
     setStep(2);
   };
 
+  const handleNextPassword = () => {
+    if (!password.trim()) return setPasswordError("Password is required.");
+    if (password.length < 3)
+      return setPasswordError("Password must be at least 3 characters.");
+    if (password !== confirmPassword)
+      return setPasswordError("Passwords do not match.");
+    setPasswordError("");
+    setStep(3);
+  };
+
   const handleSignUp = async () => {
-    if (!username.trim()) {
-      setUsernameError("Username is required.");
-      return;
-    }
-    if (username.length < 3) {
-      setUsernameError("Username must be at least 3 characters.");
-      return;
-    }
+    if (!username.trim()) return setUsernameError("Username is required.");
+    if (username.length < 3)
+      return setUsernameError(
+        "The username field must be at least 3 characters.",
+      );
     setUsernameError("");
     setIsSubmitting(true);
 
@@ -120,9 +203,8 @@ export default function SignUpModal({
             setStep(1);
             setEmailError(data.errors.email[0]);
           }
-          if (data.errors.username?.[0]) {
+          if (data.errors.username?.[0])
             setUsernameError(data.errors.username[0]);
-          }
         }
       } else {
         handleClose();
@@ -137,28 +219,7 @@ export default function SignUpModal({
 
   if (!isOpen) return null;
 
-  const bar1 = step === 1 ? "#B7B3F4" : "#4F46E5";
-  const bar2 = step === 1 ? "#EEEDFC" : step === 2 ? "#B7B3F4" : "#4F46E5";
-  const bar3 = step <= 2 ? "#EEEDFC" : step === 3 ? "#B7B3F4" : "#4F46E5";
-
-  // Reusable input className builder
-  const inputClass = (hasError: boolean) =>
-    `w-full mt-[8px] border-[1.5px] h-[48px] rounded-[8px] pl-[13px] pr-[15px] py-[12px] text-[14px] font-inter font-medium leading-[100%] tracking-[0%] focus:outline-none focus:ring-0 caret-[#8A8A8A]
-  ${
-    hasError
-      ? "border-[#F4161A] text-[#F4161A] placeholder:text-[#8A8A8A]"
-      : "border-[#D1D1D1] text-[#3D3D3D] placeholder:text-[#8A8A8A] focus:border-[#8A8A8A]"
-  }`;
-  const labelClass = (hasError: boolean) =>
-    `mt-[24px] text-sm font-medium h-[17px] flex items-center ${hasError ? "text-[#F4161A]" : ""}`;
-
-  const errorMsg = (msg: string) => (
-    <p className="error-message mt-[4px] text-[12px] font-normal leading-none tracking-normal h-[17px] flex items-center text-[#F4161A]">
-      {msg}
-    </p>
-  );
-
-  const iconColor = (hasError: boolean) => (hasError ? "#F4161A" : "#ADADAD");
+  const hasAvatar = !!(avatarPreview && avatar);
 
   return (
     <div
@@ -167,18 +228,25 @@ export default function SignUpModal({
       onClick={handleClose}
     >
       <style>{`
-        @keyframes errorIn {
-          from { opacity: 0; transform: translateY(-4px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .error-message { animation: errorIn 300ms ease-out; }
-      `}</style>
-
+  @keyframes errorIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .error-message { animation: errorIn 300ms ease-out; }
+  .avatar-upload-box:hover {
+    background-color: #EEEDFC !important;
+    border-color: #DDDBFA !important;
+  }
+  .avatar-upload-box:active {
+    background-color: #DDDBFA !important;
+    border-color: #B7B3F4 !important;
+  }
+`}</style>
       <div
         className="bg-white rounded-[16px] relative"
         style={{
           width: "460px",
-          height: step === 1 ? "416px" : step === 2 ? "513px" : "623px",
+          height: MODAL_HEIGHTS[step],
           transition: "height 0.3s ease",
         }}
         onClick={(e) => e.stopPropagation()}
@@ -193,6 +261,7 @@ export default function SignUpModal({
         ) : (
           <div style={{ width: "16px" }} />
         )}
+
         <div
           className="cursor-pointer absolute right-[15px] top-[20.5px]"
           onClick={handleClose}
@@ -208,20 +277,8 @@ export default function SignUpModal({
             Join and start learning today
           </p>
 
-          <div className="flex items-center w-full justify-between mt-[24px]">
-            {[bar1, bar2, bar3].map((color, i) => (
-              <div
-                key={i}
-                className="w-[114px] h-[8px] rounded-[30px]"
-                style={{
-                  backgroundColor: color,
-                  transition: "background-color 0.3s ease",
-                }}
-              />
-            ))}
-          </div>
+          <ProgressBars step={step} />
 
-          {/* ── STEP 1 ── */}
           {step === 1 && (
             <>
               <div className="flex flex-col w-full">
@@ -240,7 +297,7 @@ export default function SignUpModal({
                   }}
                   className={inputClass(!!emailError)}
                 />
-                {emailError && errorMsg(emailError)}
+                {emailError && <ErrorMessage msg={emailError} />}
               </div>
               <div
                 className="w-[360px] h-[47px] bg-[#4F46E5] rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white mt-[18px] cursor-pointer"
@@ -248,19 +305,13 @@ export default function SignUpModal({
               >
                 Next
               </div>
-              <div className="flex items-center w-[320px] mx-auto mt-[16px] h-[21px]">
-                <div className="flex-1 h-[1px] bg-[#D1D1D1]" />
-                <span className="px-[8px] text-[14px] font-inter font-medium leading-[100%] tracking-[0%] text-center text-[#8A8A8A]">
-                  or
-                </span>
-                <div className="flex-1 h-[1px] bg-[#D1D1D1]" />
-              </div>
+              <OrDivider />
               <div className="flex items-center justify-center mt-[8px] h-[17px]">
                 <p className="text-[#666666] font-normal text-[12px] leading-[100%] tracking-[0%] text-center">
                   Already have an account?
                 </p>
                 <p
-                  className="text-[#141414] ml-[8px]   decoration-skip-ink-auto font-medium text-[14px] leading-[100%] tracking-[0%] text-center underline decoration-solid decoration-[0%] underline-offset-[25%] cursor-pointer"
+                  className="text-[#141414] ml-[8px] decoration-skip-ink-auto font-medium text-[14px] leading-[100%] tracking-[0%] text-center underline decoration-solid decoration-[0%] underline-offset-[25%] cursor-pointer"
                   onClick={() => {
                     handleClose();
                     onSignInClick?.();
@@ -272,9 +323,9 @@ export default function SignUpModal({
             </>
           )}
 
-          {/* ── STEP 2 ── */}
           {step === 2 && (
             <>
+              {/* Password */}
               <div className="flex flex-col w-full">
                 <label
                   htmlFor="password"
@@ -296,7 +347,7 @@ export default function SignUpModal({
                     className={`${inputClass(!!passwordError)} pr-[40px]`}
                   />
                   <div
-                    className="absolute right-[12px] top-1/2 -translate-y-1/2 cursor-pointer"
+                    className="absolute right-[12px] top-1/2 -translate-y-1/2 cursor-pointer mt-[4px]"
                     onClick={() => setShowPassword((v) => !v)}
                   >
                     {showPassword ? (
@@ -307,6 +358,7 @@ export default function SignUpModal({
                   </div>
                 </div>
               </div>
+
               <div className="flex flex-col w-full">
                 <label
                   htmlFor="confirmPassword"
@@ -328,7 +380,7 @@ export default function SignUpModal({
                     className={`${inputClass(!!passwordError)} pr-[40px]`}
                   />
                   <div
-                    className="absolute right-[12px] top-1/2 -translate-y-1/2 cursor-pointer"
+                    className="absolute right-[12px] top-1/2 -translate-y-1/2 cursor-pointer mt-[4px]"
                     onClick={() => setShowConfirmPassword((v) => !v)}
                   >
                     {showConfirmPassword ? (
@@ -338,54 +390,25 @@ export default function SignUpModal({
                     )}
                   </div>
                 </div>
-                {passwordError && errorMsg(passwordError)}
+                {passwordError && <ErrorMessage msg={passwordError} />}
               </div>
+
               <div
                 className="w-[360px] h-[47px] bg-[#4F46E5] rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white mt-[16px] cursor-pointer"
-                onClick={() => {
-                  if (!password.trim()) {
-                    setPasswordError("Password is required.");
-                    return;
-                  }
-                  if (password.length < 3) {
-                    setPasswordError("Password must be at least 3 characters.");
-                    return;
-                  }
-                  if (password !== confirmPassword) {
-                    setPasswordError("Passwords do not match.");
-                    return;
-                  }
-                  setPasswordError("");
-                  setStep(3);
-                }}
+                onClick={handleNextPassword}
               >
                 Next
               </div>
-              <div className="flex items-center w-[320px] mx-auto mt-[16px] h-[21px]">
-                <div className="flex-1 h-[1px] bg-[#D1D1D1]" />
-                <span className="px-[8px] text-[14px] font-inter font-medium leading-[100%] tracking-[0%] text-center text-[#8A8A8A]">
-                  or
-                </span>
-                <div className="flex-1 h-[1px] bg-[#D1D1D1]" />
-              </div>
-              <div className="flex items-center justify-center mt-[8px]">
-                <p className="text-[#666666] font-normal text-[12px] leading-[100%] tracking-[0%] text-center">
-                  Already have an account?
-                </p>
-                <p
-                  className="text-[#141414] ml-[8px]   decoration-skip-ink-auto font-medium text-[14px] leading-[100%] tracking-[0%] text-center underline decoration-solid decoration-[0%] underline-offset-[25%] cursor-pointer"
-                  onClick={() => {
-                    handleClose();
-                    onSignInClick?.();
-                  }}
-                >
-                  Log In
-                </p>
-              </div>
+              <OrDivider />
+              <LogInRow
+                onClick={() => {
+                  handleClose();
+                  onSignInClick?.();
+                }}
+              />
             </>
           )}
 
-          {/* ── STEP 3 ── */}
           {step === 3 && (
             <>
               <div className="flex flex-col w-full">
@@ -407,27 +430,58 @@ export default function SignUpModal({
                   }}
                   className={inputClass(!!usernameError)}
                 />
-                {usernameError && errorMsg(usernameError)}
+                {usernameError && <ErrorMessage msg={usernameError} />}
               </div>
+
               <div className="flex flex-col w-full">
                 <label className="mt-[24px] text-sm font-medium">
                   Upload Avatar
                 </label>
                 <div
-                  className="mt-[8px] border-[1.5px] border-[#D1D1D1] rounded-[8px] flex items-center justify-center cursor-pointer overflow-hidden"
-                  style={{ width: "360px", height: "140px" }}
+                  className="avatar-upload-box mt-[8px] rounded-[8px] flex items-center justify-center cursor-pointer overflow-hidden"
+                  style={{
+                    width: "360px",
+                    height: "140px",
+                    border: hasAvatar
+                      ? "1.5px solid #DDDBFA"
+                      : "1.5px solid #D1D1D1",
+                    backgroundColor: hasAvatar ? "#EEEDFC" : "transparent",
+                    transition:
+                      "background-color 500ms ease-out, border-color 500ms ease-out",
+                  }}
                   onClick={() =>
                     document.getElementById("avatarInput")?.click()
                   }
                 >
-                  {avatarPreview ? (
-                    <Image
-                      src={avatarPreview}
-                      alt="Avatar preview"
-                      className="w-full h-full object-cover"
-                      width={100}
-                      height={100}
-                    />
+                  {hasAvatar ? (
+                    <div className="w-[240px] h-[54px] flex items-center gap-[10px]">
+                      <Image
+                        src={avatarPreview!}
+                        alt="Avatar preview"
+                        className="w-[54px] h-[54px] rounded-[40px] object-cover flex-shrink-0"
+                        width={54}
+                        height={54}
+                      />
+                      <div className="h-[41px] min-w-0 flex-1">
+                        <p className="text-[#525252] h-[15px] flex items-center font-normal text-xs leading-none tracking-normal overflow-hidden">
+                          <span className="truncate block max-w-[140px]">
+                            {avatar!.name}
+                          </span>
+                        </p>
+                        <p className="text-[#ADADAD] font-normal text-[10px] leading-none tracking-normal h-[12px] flex items-center">
+                          Size — {formatFileSize(avatar!.size)}
+                        </p>
+                        <p
+                          className="h-[12px] flex items-center mt-[2px] text-[#4F46E5] font-medium text-[10px] leading-none tracking-normal underline decoration-solid underline-offset-[25%] decoration-[0px]"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            document.getElementById("avatarInput")?.click();
+                          }}
+                        >
+                          Change
+                        </p>
+                      </div>
+                    </div>
                   ) : (
                     <div className="flex flex-col items-center">
                       <UploadPhotoIcon />
@@ -448,13 +502,15 @@ export default function SignUpModal({
                     accept="image/*"
                     className="hidden"
                     onChange={(e) => {
-                      const file = e.target.files?.[0] ?? null;
+                      const file = e.target.files?.[0];
+                      if (!file) return;
                       setAvatar(file);
-                      if (file) setAvatarPreview(URL.createObjectURL(file));
+                      setAvatarPreview(URL.createObjectURL(file));
                     }}
                   />
                 </div>
               </div>
+
               <div
                 className="w-[360px] h-[47px] bg-[#4F46E5] rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white mt-[18px] cursor-pointer"
                 style={{
@@ -465,27 +521,13 @@ export default function SignUpModal({
               >
                 {isSubmitting ? "Signing Up..." : "Sign Up"}
               </div>
-              <div className="flex items-center w-[320px] mx-auto mt-[16px] h-[21px]">
-                <div className="flex-1 h-[1px] bg-[#D1D1D1]" />
-                <span className="px-[8px] text-[14px] font-inter font-medium leading-[100%] tracking-[0%] text-center text-[#8A8A8A]">
-                  or
-                </span>
-                <div className="flex-1 h-[1px] bg-[#D1D1D1]" />
-              </div>
-              <div className="flex items-center justify-center mt-[8px]">
-                <p className="text-[#666666] font-normal text-[12px] leading-[100%] tracking-[0%] text-center">
-                  Already have an account?
-                </p>
-                <p
-                  className="text-[#141414] ml-[8px]   decoration-skip-ink-auto font-medium text-[14px] leading-[100%] tracking-[0%] text-center underline decoration-solid decoration-[0%] underline-offset-[25%] cursor-pointer"
-                  onClick={() => {
-                    handleClose();
-                    onSignInClick?.();
-                  }}
-                >
-                  Log In
-                </p>
-              </div>
+              <OrDivider />
+              <LogInRow
+                onClick={() => {
+                  handleClose();
+                  onSignInClick?.();
+                }}
+              />
             </>
           )}
         </div>

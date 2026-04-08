@@ -4,10 +4,10 @@ import Image from "next/image";
 import StarIcon from "../icons/StarIcon";
 import CalendarIcon from "../icons/CalendarIcon";
 import TimeIcon from "../icons/TimeIcon";
-import SessionIcon from "../icons/SessionIcon";
 import SessionTypeIcon from "../icons/SessionTypeIcon";
-import LocationIcon from "../icons/LocationIcon";
 import EnrolmentListLocationIcon from "../icons/EnrolmentListLocationIcon";
+import NoEnrollmentIcon from "../icons/NoEnrollmentIcon";
+import { useRouter } from "next/navigation";
 
 interface Enrollment {
   id: number;
@@ -46,6 +46,7 @@ interface Props {
 }
 
 export default function EnrolledCoursesDrawer({ isOpen, onClose }: Props) {
+  const router = useRouter();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,19 +105,24 @@ export default function EnrolledCoursesDrawer({ isOpen, onClose }: Props) {
           )}
 
           {!loading && !error && enrollments.length === 0 && (
-            <div className="flex flex-col items-center justify-center mt-[100px] gap-[16px]">
-              <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-                <circle cx="32" cy="32" r="32" fill="#EEEDFC" />
-                <path
-                  d="M20 44V22a2 2 0 012-2h20a2 2 0 012 2v22l-12-6-12 6z"
-                  stroke="#736BEA"
-                  strokeWidth="2"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <p className="text-[#8A8A8A] font-medium text-[18px]">
-                No enrolled courses yet
+            <div className="flex flex-col items-center justify-center  mt-[274px] overflow-hidden">
+              <NoEnrollmentIcon />
+              <p className="mt-[4px] h-[29px] text-[#130E67] font-semibold text-[24px] leading-[100%] tracking-[0%]">
+                No Enrolled Courses Yet
               </p>
+              <p className="text-center text-[#130E67] h-[48px] mt-[8px]  font-medium text-[14px] leading-[100%] tracking-[0%]">
+                Your learning journey starts here! <br /> Browse courses to get
+                started.
+              </p>
+              <div
+                onClick={() => {
+                  router.push("/courses");
+                  onClose();
+                }}
+                className="w-[175px] mt-[12px] h-[58px] bg-[#4F46E5] font-medium text-[16px] leading-[24px] tracking-[0%] text-center flex items-center justify-center rounded-[8px] text-white cursor-pointer"
+              >
+                Browse Courses
+              </div>
             </div>
           )}
           {!loading &&

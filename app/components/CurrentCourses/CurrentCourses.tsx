@@ -20,10 +20,14 @@ interface Enrollment {
 export default function CurrentCourses() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
     setIsLoggedIn(true);
 
@@ -37,9 +41,11 @@ export default function CurrentCourses() {
       .then((json) => {
         setEnrollments((json.data ?? []).slice(0, 4));
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
-
+  if (loading) return null;
+  if (isLoggedIn && enrollments.length === 0) return null;
   const slots = isLoggedIn
     ? [
         ...enrollments,
@@ -48,7 +54,6 @@ export default function CurrentCourses() {
     : [null, null, null];
 
   const blurClasses = ["blur-[20px]", "blur-[20px]", "blur-[10px]"];
-  const router = useRouter();
   return (
     <div className="w-[1566px] mx-auto mt-[64px]">
       <h1 className="text-[#0A0A0A] font-semibold text-[40px] leading-[100%] tracking-[0%] h-[48px] flex items-center">

@@ -73,7 +73,6 @@ function CoursesList({
     fetchAll();
   }, []);
 
-  // Reset to page 1 whenever filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedCategories, selectedTopics, selectedInstructors]);
@@ -133,7 +132,7 @@ function CoursesList({
             className="px-[20px] py-[7px] rounded-[10px] bg-white h-[49px] flex items-center cursor-pointer select-none"
             onClick={() => setDropdownOpen((prev) => !prev)}
           >
-            <p className="text-[#666666] font-medium text-[16px] leading-[24px] w-[166px]">
+            <p className="text-[#666666] font-medium text-[16px] leading-[24px]">
               Sort By:
               <span className="text-[#4F46E5]"> {SORT_LABELS[sortBy]}</span>
             </p>
@@ -165,7 +164,7 @@ function CoursesList({
                     setDropdownOpen(false);
                     setCurrentPage(1);
                   }}
-                  className={`px-[20px] py-[10px] text-[16px] font-medium leading-[24px] cursor-pointer hover:bg-[#F5F5F5] whitespace-nowrap ${
+                  className={`px-[20px] py-[10px] text-[16px] font-medium leading-[24px] cursor-pointer  hover:bg-[#DDDBFA] ease-out duration-300 whitespace-nowrap ${
                     sortBy === option ? "text-[#4F46E5]" : "text-[#666666]"
                   }`}
                 >
@@ -182,7 +181,13 @@ function CoursesList({
           <div
             key={course.id}
             onClick={() => router.push(`/courses/${course.id}`)}
-            className="w-[373px] h-[451px] bg-white rounded-[12px] p-[20px] flex flex-col"
+            className="w-[373px] h-[451px] bg-white rounded-[12px] p-[20px] flex flex-col 
+  ease-out duration-300        
+  border-[1px] border-[#F5F5F5] transition-all cursor-pointer 
+  hover:border-[#B7B3F4] hover:shadow-[0px_0px_15px_0px_rgba(138,130,212,0.2)]
+  focus:border-[#958FEF] focus:shadow-[0px_0px_45px_0px_rgba(138,130,212,0.15)]
+  focus:outline-none"
+            tabIndex={0}
           >
             <Image
               src={course.image}
@@ -193,11 +198,8 @@ function CoursesList({
             />
             <div className="flex items-center mt-[18px] justify-between h-[18px]">
               <div className="flex items-center">
-                <p className="text-[#8A8A8A] font-medium text-[14px] leading-none tracking-normal">
-                  Lecturer
-                </p>
-                <p className="text-[#666666] font-medium text-[14px] leading-none tracking-normal ml-[6px]">
-                  {course.instructor.name}
+                <p className="text-[#ADADAD] font-medium text-[14px] leading-none tracking-normal ">
+                  {course.instructor.name} | {course.durationWeeks} weeks
                 </p>
               </div>
               <div className="flex items-center gap-[6px]">
@@ -245,7 +247,7 @@ function CoursesList({
                   ${course.basePrice}
                 </p>
               </div>
-              <div className="w-[103px] h-[48px] flex items-center justify-center bg-[#4F46E5] text-white font-medium text-[16px] leading-[24px] tracking-normal rounded-[8px]">
+              <div className="w-[103px] h-[48px] flex items-center cursor-pointer justify-center bg-[#4F46E5] text-white font-medium text-[16px] leading-[24px] tracking-normal rounded-[8px]">
                 Details
               </div>
             </div>
@@ -254,29 +256,71 @@ function CoursesList({
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center gap-[8px] mt-[40px]">
+        <div className="flex items-center gap-[8px] mt-[32px] justify-center">
+          {/* Prev arrow */}
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="px-[16px] h-[40px] rounded-[10px] bg-white text-[#666666] font-medium text-[16px] disabled:opacity-40"
+            className={`w-[40px] h-[40px] rounded-[4px] flex items-center justify-center transition-colors border
+    ${
+      currentPage === 1
+        ? "bg-white border-[#D1D1D1] cursor-default opacity-100"
+        : "bg-white border-[#D1D1D1] cursor-pointer hover:bg-[#DDDBFA] hover:border-[#B7B3F4]"
+    }`}
           >
-            Prev
+            <svg
+              width="12"
+              height="11"
+              viewBox="0 0 12 11"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5.30113 0.000709453L6.32386 1.01207L2.77272 4.56321L11.6932 4.56321L11.6932 6.04048L2.77272 6.04048L6.32386 9.58594L5.30113 10.603L-4.5935e-06 5.30185L5.30113 0.000709453Z"
+                fill={currentPage === 1 ? "#D1D1D1" : "#4F46E5"}
+              />
+            </svg>
           </button>
+
+          {/* Page numbers */}
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <button
               key={page}
               onClick={() => setCurrentPage(page)}
-              className={`w-[40px] h-[40px] rounded-[10px] font-medium text-[16px] ${page === currentPage ? "bg-[#4F46E5] text-white" : "bg-white text-[#666666]"}`}
+              className={`w-[40px] h-[40px] rounded-[4px] font-medium text-[14px] transition-colors cursor-pointer border
+  ${
+    page === currentPage
+      ? "bg-[#281ED2] text-white border-[#4F46E5]"
+      : "bg-white text-[#4F46E5] border-[#D1D1D1] hover:bg-[#DDDBFA] hover:text-[#4F46E5] hover:border-[#B7B3F4]"
+  }`}
             >
               {page}
             </button>
           ))}
+
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="px-[16px] h-[40px] rounded-[10px] bg-white text-[#666666] font-medium text-[16px] disabled:opacity-40"
+            className={`w-[40px] h-[40px] rounded-[4px] flex items-center justify-center transition-colors border
+    ${
+      currentPage === totalPages
+        ? "bg-white border-[#D1D1D1] cursor-default opacity-100"
+        : "bg-white border-[#D1D1D1] cursor-pointer hover:bg-[#DDDBFA] hover:border-[#B7B3F4]"
+    }`}
           >
-            Next
+            <svg
+              width="12"
+              height="11"
+              viewBox="0 0 12 11"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                transform="scale(-1,1) translate(-12,0)"
+                d="M5.30113 0.000709453L6.32386 1.01207L2.77272 4.56321L11.6932 4.56321L11.6932 6.04048L2.77272 6.04048L6.32386 9.58594L5.30113 10.603L-4.5935e-06 5.30185L5.30113 0.000709453Z"
+                fill={currentPage === totalPages ? "#D1D1D1" : "#4F46E5"}
+              />
+            </svg>
           </button>
         </div>
       )}
