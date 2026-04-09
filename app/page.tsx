@@ -18,12 +18,21 @@ export default function Home() {
   const [userData, setUserData] = useState<{ avatar?: string } | null>(null);
 
   useEffect(() => {
-    // Check if user is logged in on initial load
     const token = localStorage.getItem("authToken");
     if (token) {
       setIsLoggedIn(true);
       fetchUserData(token);
     }
+
+    const handleAuthUpdated = () => {
+      const t = localStorage.getItem("authToken");
+      if (t) {
+        setIsLoggedIn(true);
+        fetchUserData(t);
+      }
+    };
+    window.addEventListener("auth-updated", handleAuthUpdated);
+    return () => window.removeEventListener("auth-updated", handleAuthUpdated);
   }, []);
 
   const fetchUserData = async (token: string) => {

@@ -9,6 +9,7 @@ import MarketingSvg from "@/app/components/icons/MarketingSvg";
 import BusinessSvg from "@/app/components/icons/BusinessSvg";
 import DataScienceSvg from "@/app/components/icons/DataScienceSvg";
 import ArrowNavigation from "@/app/components/icons/ArrowNavigation";
+import { useRouter } from "next/navigation";
 import WeeeksIcon from "@/app/components/icons/WeeeksIcon";
 import HoursIcon from "@/app/components/icons/HoursIcon";
 import BigStarIcon from "@/app/components/icons/BigStarIcon";
@@ -58,6 +59,7 @@ export default function CourseDetailPage() {
     "data-science": <DataScienceSvg />,
   };
   const { id } = useParams();
+  const router = useRouter();
   const [course, setCourse] = useState<Course | null>(null);
   const [signInModalOpen, setSignInModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
@@ -77,11 +79,17 @@ export default function CourseDetailPage() {
   return (
     <div className="w-[1566px] mx-auto mt-[64px]">
       <div className="flex items-center">
-        <p className="text-[#666666] font-medium text-[18px] leading-[100%] tracking-[0%] h-[22px] flex items-center w-[51px] justify-center">
+        <p
+          onClick={() => router.push("/")}
+          className="text-[#666666] cursor-pointer font-medium text-[18px] leading-[100%] tracking-[0%] h-[22px] flex items-center w-[51px] justify-center hover:text-[#4F46E5] transition-colors duration-300 ease-out"
+        >
           Home
         </p>
         <ArrowNavigation />
-        <p className="flex items-center ml-[10px] text-[#666666] font-medium text-[18px] leading-[100%] tracking-[0%] justify-center  h-[24px]">
+        <p
+          onClick={() => router.push("/courses")}
+          className="flex items-center ml-[10px] cursor-pointer text-[#666666] font-medium text-[18px] leading-[100%] tracking-[0%] justify-center h-[24px] hover:text-[#4F46E5] transition-colors duration-300 ease-out"
+        >
           Browse
         </p>
         <ArrowNavigation />

@@ -30,8 +30,9 @@ export default function Header({
     <>
       <div className="flex w-[full] items-center h-[108px]  border-b-[#D1D1D1] border-b-[1px]">
         <div className="w-[1566px] h-[60px] mx-auto my-[24px] flex justify-between items-center">
-          <div
-            className="w-[60px] h-[60px] bg-[#4F46E5] rounded-[14px] flex items-center justify-center cursor-pointer"
+          <button
+            type="button"
+            className="w-[60px] h-[60px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out rounded-[14px] flex items-center justify-center cursor-pointer"
             onClick={() => router.push("/")}
           >
             <Image
@@ -41,7 +42,7 @@ export default function Header({
               alt="logo"
               className="w-[29px] h-[30px]"
             />
-          </div>
+          </button>
           <div className="flex items-center min-w-[510px] shrink-0">
             <div
               onClick={() => {
@@ -102,27 +103,28 @@ export default function Header({
               </>
             ) : (
               <div className="flex items-center justify-between w-[254px] h-[60px] ml-[36px]">
-                <div
+                <button
+                  type="button"
                   onClick={onSignInClick}
                   className="w-[114px] h-[60px]
   flex items-center justify-center text-center cursor-pointer
   border-[2px] border-[#958FEF] rounded-[8px]
   font-medium text-[20px] leading-none tracking-normal
   text-[#4F46E5]
-
   transition-colors duration-300 ease-out
-
   hover:bg-[#281ED2] hover:text-white hover:border-[#281ED2]
-  active:bg-[#1E169D] active:border-[#1E169D]"
+  active:bg-[#1E169D] active:border-[#1E169D]
+  focus-visible:bg-[#281ED2] focus-visible:text-white focus-visible:border-[#1E169D] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none"
                 >
                   Log In
-                </div>
-                <div
-                  className="w-[125px] h-[60px] bg-[#4F46E5] rounded-[8px] flex items-center justify-center font-medium text-[20px] leading-none tracking-normal text-center text-white cursor-pointer"
+                </button>
+                <button
+                  type="button"
+                  className="w-[125px] h-[60px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out rounded-[8px] flex items-center justify-center font-medium text-[20px] leading-none tracking-normal text-center text-white cursor-pointer"
                   onClick={onSignUpClick}
                 >
                   Sign Up
-                </div>
+                </button>
               </div>
             )}
           </div>

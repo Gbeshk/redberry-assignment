@@ -1,6 +1,6 @@
 import React from "react";
 
-function Timee() {
+function SmallTimeIcon() {
   return (
     <div>
       <svg
@@ -19,4 +19,4 @@ function Timee() {
   );
 }
 
-export default Timee;
+export default SmallTimeIcon;

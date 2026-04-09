@@ -43,7 +43,15 @@ type ApiResponse = {
 function CourseCard({ course }: { course: Course }) {
   const router = useRouter();
   return (
-    <div className="w-[506px] h-[576px] bg-white rounded-[12px] p-[20px] flex flex-col relative">
+    <div
+      className="w-[506px] h-[576px] bg-white rounded-[12px] p-[20px] flex flex-col relative
+  border-[1px] border-[#F5F5F5] transition-all ease-out duration-300
+  hover:border-[#B7B3F4] hover:shadow-[0px_0px_15px_0px_rgba(138,130,212,0.2)]
+  focus:border-[#958FEF] focus:shadow-[0px_0px_45px_0px_rgba(138,130,212,0.15)]
+  focus:outline-none cursor-pointer"
+      tabIndex={0}
+      onClick={() => router.push(`/courses/${course.id}`)}
+    >
       <Image
         src={course.image}
         alt={course.title}
@@ -84,14 +92,13 @@ function CourseCard({ course }: { course: Course }) {
             ${course.basePrice}
           </p>
         </div>
-        <div
-          onClick={() => {
-            router.push(`/courses/${course.id}`);
-          }}
-          className="w-[116px] h-[58px] bg-[#4F46E5] cursor-pointer flex items-center justify-center rounded-[8px] font-medium text-[20px] leading-none tracking-normal text-white"
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); router.push(`/courses/${course.id}`); }}
+          className="w-[116px] h-[58px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out flex items-center justify-center rounded-[8px] font-medium text-[20px] leading-none tracking-normal text-white cursor-pointer"
         >
           Details
-        </div>
+        </button>
       </div>
     </div>
   );

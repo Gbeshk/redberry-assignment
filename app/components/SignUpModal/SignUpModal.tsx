@@ -1,11 +1,12 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import CloseSvg from "../icons/CloseSvg";
 import GoBackSvg from "../icons/GoBackSvg";
 import UploadPhotoIcon from "../icons/UploadPhotoIcon";
 import ShowPassSvg from "../icons/ShowPassSvg";
 import HidePassSvg from "../icons/HidePassSvg";
+import { formatFileSize } from "../../utils/formatFileSize";
 
 interface SignUpModalProps {
   isOpen: boolean;
@@ -14,30 +15,31 @@ interface SignUpModalProps {
   onSignInClick?: () => void;
 }
 
-const MODAL_HEIGHTS: Record<number, string> = {
+const MODAL_MIN_HEIGHTS: Record<number, string> = {
   1: "416px",
   2: "513px",
-  3: "623px",
+  3: "622px",
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const inputClass = (hasError: boolean) =>
-  `w-full mt-[8px] border-[1.5px] h-[48px] rounded-[8px] pl-[13px] pr-[15px] py-[12px] text-[14px] font-inter font-medium leading-[100%] tracking-[0%] focus:outline-none focus:ring-0 caret-[#8A8A8A] ${
-    hasError
-      ? "border-[#F4161A] text-[#F4161A] placeholder:text-[#8A8A8A]"
-      : "border-[#D1D1D1] text-[#3D3D3D] placeholder:text-[#8A8A8A] focus:border-[#8A8A8A]"
-  }`;
-
+  `w-full mt-[8px] h-[48px] rounded-[8px] pl-[13px] pr-[15px] py-[12px] 
+   text-[14px] font-inter font-medium leading-[100%] tracking-[0%] 
+   focus:outline-none focus:ring-0 caret-[#8A8A8A]
+   placeholder:text-[#8A8A8A] placeholder:font-medium placeholder:text-[14px]
+   hover:placeholder:text-[#D1D1D1]
+   focus:placeholder:text-[#F5F5F5]
+   ${
+     hasError
+       ? "border-[1.5px] border-[#F4161A] text-[#F4161A]"
+       : "border-[1.5px] border-[#D1D1D1] text-[#3D3D3D] hover:border-[#ADADAD] focus:border-[#8A8A8A]"
+   }`;
 const labelClass = (hasError: boolean) =>
   `mt-[24px] text-sm font-medium h-[17px] flex items-center${hasError ? " text-[#F4161A]" : ""}`;
 
 const iconColor = (hasError: boolean) => (hasError ? "#F4161A" : "#ADADAD");
 
-const formatFileSize = (bytes: number) =>
-  bytes < 1024 * 1024
-    ? `${(bytes / 1024).toFixed(1)} KB`
-    : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 
 function ErrorMessage({ msg }: { msg: string }) {
   return (
@@ -118,14 +120,17 @@ export default function SignUpModal({
   const [usernameError, setUsernameError] = useState("");
   const [avatar, setAvatar] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const [isConfirmPasswordFocused, setIsConfirmPasswordFocused] =
+    useState(false);
 
-  useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
+  const iconColor = (hasError: boolean, isFocused: boolean) => {
+    if (hasError) return "#F4161A";
+    if (isFocused) return "#8A8A8A";
+    return "#ADADAD";
+  };
 
   const handleClose = () => {
     setStep(1);
@@ -140,6 +145,7 @@ export default function SignUpModal({
     setUsernameError("");
     setAvatar(null);
     setAvatarPreview(null);
+    setAvatarError("");
     setIsSubmitting(false);
     onClose();
   };
@@ -189,7 +195,7 @@ export default function SignUpModal({
       );
 
       const rawText = await response.text();
-      let data: { errors?: { email?: string[]; username?: string[] } } | null =
+      let data: { data?: { token?: string }; errors?: { email?: string[]; username?: string[] } } | null =
         null;
       try {
         data = JSON.parse(rawText);
@@ -207,6 +213,11 @@ export default function SignUpModal({
             setUsernameError(data.errors.username[0]);
         }
       } else {
+        const token = data?.data?.token;
+        if (token) {
+          localStorage.setItem("authToken", token);
+          window.dispatchEvent(new Event("auth-updated"));
+        }
         handleClose();
         onSuccess?.();
       }
@@ -227,27 +238,12 @@ export default function SignUpModal({
       style={{ backgroundColor: "#00000040" }}
       onClick={handleClose}
     >
-      <style>{`
-  @keyframes errorIn {
-    from { opacity: 0; transform: translateY(-4px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .error-message { animation: errorIn 300ms ease-out; }
-  .avatar-upload-box:hover {
-    background-color: #EEEDFC !important;
-    border-color: #DDDBFA !important;
-  }
-  .avatar-upload-box:active {
-    background-color: #DDDBFA !important;
-    border-color: #B7B3F4 !important;
-  }
-`}</style>
       <div
-        className="bg-white rounded-[16px] relative"
+        className="bg-white rounded-[16px] relative pb-[50px]"
         style={{
           width: "460px",
-          height: MODAL_HEIGHTS[step],
-          transition: "height 0.3s ease",
+          minHeight: MODAL_MIN_HEIGHTS[step],
+          transition: "min-height 0.3s ease",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -299,12 +295,13 @@ export default function SignUpModal({
                 />
                 {emailError && <ErrorMessage msg={emailError} />}
               </div>
-              <div
-                className="w-[360px] h-[47px] bg-[#4F46E5] rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white mt-[18px] cursor-pointer"
+              <button
+                type="button"
+                className="w-[360px] h-[47px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white mt-[18px] cursor-pointer"
                 onClick={handleNext}
               >
                 Next
-              </div>
+              </button>
               <OrDivider />
               <div className="flex items-center justify-center mt-[8px] h-[17px]">
                 <p className="text-[#666666] font-normal text-[12px] leading-[100%] tracking-[0%] text-center">
@@ -345,15 +342,21 @@ export default function SignUpModal({
                       if (passwordError) setPasswordError("");
                     }}
                     className={`${inputClass(!!passwordError)} pr-[40px]`}
+                    onFocus={() => setIsPasswordFocused(true)}
+                    onBlur={() => setIsPasswordFocused(false)}
                   />
                   <div
                     className="absolute right-[12px] top-1/2 -translate-y-1/2 cursor-pointer mt-[4px]"
                     onClick={() => setShowPassword((v) => !v)}
                   >
                     {showPassword ? (
-                      <ShowPassSvg color={iconColor(!!passwordError)} />
+                      <ShowPassSvg
+                        color={iconColor(!!passwordError, isPasswordFocused)}
+                      />
                     ) : (
-                      <HidePassSvg color={iconColor(!!passwordError)} />
+                      <HidePassSvg
+                        color={iconColor(!!passwordError, isPasswordFocused)}
+                      />
                     )}
                   </div>
                 </div>
@@ -378,27 +381,40 @@ export default function SignUpModal({
                       if (passwordError) setPasswordError("");
                     }}
                     className={`${inputClass(!!passwordError)} pr-[40px]`}
+                    onFocus={() => setIsConfirmPasswordFocused(true)}
+                    onBlur={() => setIsConfirmPasswordFocused(false)}
                   />
                   <div
                     className="absolute right-[12px] top-1/2 -translate-y-1/2 cursor-pointer mt-[4px]"
                     onClick={() => setShowConfirmPassword((v) => !v)}
                   >
                     {showConfirmPassword ? (
-                      <ShowPassSvg color={iconColor(!!passwordError)} />
+                      <ShowPassSvg
+                        color={iconColor(
+                          !!passwordError,
+                          isConfirmPasswordFocused,
+                        )}
+                      />
                     ) : (
-                      <HidePassSvg color={iconColor(!!passwordError)} />
+                      <HidePassSvg
+                        color={iconColor(
+                          !!passwordError,
+                          isConfirmPasswordFocused,
+                        )}
+                      />
                     )}
                   </div>
                 </div>
                 {passwordError && <ErrorMessage msg={passwordError} />}
               </div>
 
-              <div
-                className="w-[360px] h-[47px] bg-[#4F46E5] rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white mt-[16px] cursor-pointer"
+              <button
+                type="button"
+                className="w-[360px] h-[47px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white mt-[16px] cursor-pointer"
                 onClick={handleNextPassword}
               >
                 Next
-              </div>
+              </button>
               <OrDivider />
               <LogInRow
                 onClick={() => {
@@ -446,8 +462,6 @@ export default function SignUpModal({
                       ? "1.5px solid #DDDBFA"
                       : "1.5px solid #D1D1D1",
                     backgroundColor: hasAvatar ? "#EEEDFC" : "transparent",
-                    transition:
-                      "background-color 500ms ease-out, border-color 500ms ease-out",
                   }}
                   onClick={() =>
                     document.getElementById("avatarInput")?.click()
@@ -499,20 +513,29 @@ export default function SignUpModal({
                   <input
                     type="file"
                     id="avatarInput"
-                    accept="image/*"
+                    accept=".jpg,.jpeg,.png,.webp"
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
+                      const allowed = ["image/jpeg", "image/png", "image/webp"];
+                      if (!allowed.includes(file.type)) {
+                        setAvatarError("Only JPG, PNG, or WebP files are allowed.");
+                        e.target.value = "";
+                        return;
+                      }
+                      setAvatarError("");
                       setAvatar(file);
                       setAvatarPreview(URL.createObjectURL(file));
                     }}
                   />
                 </div>
+                {avatarError && <ErrorMessage msg={avatarError} />}
               </div>
 
-              <div
-                className="w-[360px] h-[47px] bg-[#4F46E5] rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white mt-[18px] cursor-pointer"
+              <button
+                type="button"
+                className="w-[360px] h-[47px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white mt-[18px] cursor-pointer"
                 style={{
                   opacity: isSubmitting ? 0.7 : 1,
                   pointerEvents: isSubmitting ? "none" : "auto",
@@ -520,7 +543,7 @@ export default function SignUpModal({
                 onClick={handleSignUp}
               >
                 {isSubmitting ? "Signing Up..." : "Sign Up"}
-              </div>
+              </button>
               <OrDivider />
               <LogInRow
                 onClick={() => {

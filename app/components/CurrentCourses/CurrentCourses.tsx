@@ -139,7 +139,11 @@ export default function CurrentCourses({ onSignInClick, onSeeAllClick }: Current
           return (
             <div
               key={i}
-              className={`w-[506px] h-full bg-white rounded-[12px] p-[20px] ${!isLoggedIn ? blurClasses[i] : ""}`}
+              onClick={() => enrollment && router.push(`/courses/${enrollment.course.id}`)}
+              tabIndex={enrollment ? 0 : -1}
+              className={`w-[506px] h-full bg-white rounded-[12px] p-[20px] border-[1px] transition-all ease-out duration-300
+                ${!isLoggedIn ? blurClasses[i] : ""}
+                ${enrollment ? "border-[#F5F5F5] cursor-pointer hover:border-[#B7B3F4] hover:shadow-[0px_0px_15px_0px_rgba(138,130,212,0.2)] focus:border-[#958FEF] focus:shadow-[0px_0px_45px_0px_rgba(138,130,212,0.15)] focus:outline-none" : "border-[#F5F5F5]"}`}
             >
               <div className="flex gap-[16px]">
                 <Image
@@ -181,14 +185,13 @@ export default function CurrentCourses({ onSignInClick, onSeeAllClick }: Current
                     />
                   </div>
                 </div>
-                <div
-                  onClick={() => {
-                    router.push(`/courses/${enrollment.course.id}`);
-                  }}
-                  className=" cursor-pointer w-[90px] h-[48px] border-[2px] border-[#958FEF] rounded-[8px] flex items-center justify-center text-[#4F46E5] font-medium text-[16px] leading-[24px] tracking-[0%] text-center"
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); enrollment && router.push(`/courses/${enrollment.course.id}`); }}
+                  className="cursor-pointer w-[90px] h-[48px] border-[2px] border-[#958FEF] rounded-[8px] flex items-center justify-center text-[#4F46E5] font-medium text-[16px] leading-[24px] tracking-[0%] text-center hover:bg-[#281ED2] hover:text-white hover:border-[#281ED2] active:bg-[#1E169D] active:border-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:text-white focus-visible:border-[#1E169D] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out"
                 >
                   View
-                </div>
+                </button>
               </div>
             </div>
           );

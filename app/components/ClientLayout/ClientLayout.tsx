@@ -59,6 +59,14 @@ export default function ClientLayout({
     return () => window.removeEventListener("auth-updated", handleAuthUpdated);
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow =
+      showSignUpModal || showSignInModal || showProfileModal ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showSignUpModal, showSignInModal, showProfileModal]);
+
   return (
     <>
       <SignUpModal
@@ -66,7 +74,6 @@ export default function ClientLayout({
         onClose={() => setShowSignUpModal(false)}
         onSuccess={() => {
           setShowSignUpModal(false);
-          setShowSignInModal(true);
         }}
         onSignInClick={() => {
           setShowSignUpModal(false);

@@ -2,6 +2,23 @@
 body {
   background-color: #f5f5f5;
 }
+.avatar-upload-box {
+  transition: background-color 500ms ease-out, border-color 500ms ease-out;
+}
+.avatar-upload-box:hover {
+  background-color: #EEEDFC !important;
+  border-color: #DDDBFA !important;
+}
+.avatar-upload-box:focus-visible {
+  outline: none;
+  background-color: #DDDBFA !important;
+  border-color: #B7B3F4 !important;
+}
+.avatar-upload-box:active {
+  background-color: #DDDBFA !important;
+  border-color: #B7B3F4 !important;
+}
+
 @keyframes errorIn {
   from {
     opacity: 0;

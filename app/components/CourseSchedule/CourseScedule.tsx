@@ -178,6 +178,9 @@ function CourseScedule({
   });
   const [enrollmentDetail, setEnrollmentDetail] =
     useState<EnrollmentDetail | null>(null);
+  const [showCompleteProfileModal, setShowCompleteProfileModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const handleSuccessDone = () => { setShowSuccessModal(false); setIsEnrolled(true); };
 
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrollmentChecked, setEnrollmentChecked] = useState(
@@ -280,8 +283,7 @@ function CourseScedule({
   }
 
   function handleSessionClick(staticKey: string) {
-    const match = matchSession(staticKey, sessionTypes);
-    if (!match) return;
+    if (!isSessionAvailable(staticKey)) return;
     setSelectedSessionKey(staticKey === selectedSessionKey ? null : staticKey);
   }
 
@@ -293,7 +295,8 @@ function CourseScedule({
 
   function isSessionAvailable(staticKey: string): boolean {
     if (sessionTypes.length === 0) return false;
-    return !!matchSession(staticKey, sessionTypes);
+    const session = matchSession(staticKey, sessionTypes);
+    return !!session && session.availableSeats > 0;
   }
 
   // --- Price calculation ---
@@ -371,9 +374,10 @@ function CourseScedule({
   }
 
   function getSessionSeatsNode(staticKey: string): React.ReactNode {
+    if (sessionTypes.length === 0) return STATIC_SESSION_SEATS[staticKey];
     const apiSession = matchSession(staticKey, sessionTypes);
-    if (apiSession) return sessionSeatsLabel(apiSession);
-    return STATIC_SESSION_SEATS[staticKey];
+    if (!apiSession || apiSession.availableSeats === 0) return null;
+    return sessionSeatsLabel(apiSession);
   }
 
   function getSessionLocation(staticKey: string): string {
@@ -435,8 +439,8 @@ function CourseScedule({
 
       if (res.status === 201) {
         const json = await res.json();
-        setEnrollmentDetail(json.data ?? null); // if API returns the enrollment
-        setIsEnrolled(true);
+        setEnrollmentDetail(json.data ?? null);
+        setShowSuccessModal(true);
         return;
       }
     } finally {
@@ -446,7 +450,7 @@ function CourseScedule({
   if (!enrollmentChecked) return null;
 
   if (isEnrolled && enrollmentDetail) {
-    return <AlreadyEnrolledCard enrollment={enrollmentDetail} />;
+    return <AlreadyEnrolledCard enrollment={enrollmentDetail} onUnenroll={() => { setIsEnrolled(false); setEnrollmentDetail(null); }} />;
   }
   return (
     <>
@@ -752,19 +756,27 @@ function CourseScedule({
               <span>${sessionMod.toFixed(0)}</span>
             </p>
           </div>
-          <div
-            className="w-[450px] h-[63px] rounded-[12px] mt-[32px] font-semibold text-[20px] leading-[24px] tracking-normal flex items-center justify-center cursor-pointer"
+          <button
+            type="button"
+            className="w-[450px] h-[63px] rounded-[12px] mt-[32px] font-semibold text-[20px] leading-[24px] tracking-normal flex items-center justify-center transition-colors duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5] disabled:cursor-not-allowed"
             style={
               selectedSessionKey &&
               isSessionAvailable(selectedSessionKey) &&
               !enrolling
-                ? { backgroundColor: "#736BEA", color: "#ffffff" }
-                : { backgroundColor: "#EEEDFC", color: "#B7B3F4" }
+                ? { backgroundColor: "#736BEA", color: "#ffffff", cursor: "pointer" }
+                : { backgroundColor: "#EEEDFC", color: "#B7B3F4", cursor: "default" }
             }
-            onClick={() => handleEnroll(false)}
+            disabled={!selectedSessionKey || !isSessionAvailable(selectedSessionKey || "") || enrolling}
+            onClick={() => {
+              if (isLoggedIn && !profileComplete) {
+                setShowCompleteProfileModal(true);
+                return;
+              }
+              handleEnroll(false);
+            }}
           >
             {enrolling ? "Enrolling..." : "Enroll Now"}
-          </div>
+          </button>
         </div>
         {!isLoggedIn && (
           <AuthWarningBanner
@@ -794,6 +806,75 @@ function CourseScedule({
             await handleEnroll(true);
           }}
         />
+      )}
+      {showSuccessModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ backgroundColor: "#00000040" }}
+          onClick={handleSuccessDone}
+        >
+          <div
+            className="bg-white w-[460px] rounded-[16px] p-[50px] flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-[72px] h-[72px] rounded-full bg-[#EEEDFC] flex items-center justify-center">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 6L9 17L4 12" stroke="#4F46E5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <p className="text-[#141414] font-semibold text-[32px] leading-[100%] tracking-[0%] text-center mt-[24px]">
+              Enrollment Successful
+            </p>
+            <p className="text-[#666666] mt-[12px] font-medium text-[14px] leading-[100%] tracking-[0%] text-center">
+              You have been successfully enrolled in this course.
+            </p>
+            <button
+              type="button"
+              onClick={handleSuccessDone}
+              className="w-full h-[47px] mt-[32px] rounded-[10px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out text-white font-medium text-[16px] leading-[24px] cursor-pointer"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+      {showCompleteProfileModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ backgroundColor: "#00000040" }}
+          onClick={() => setShowCompleteProfileModal(false)}
+        >
+          <div
+            className="bg-white w-[460px] rounded-[16px] p-[50px] flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-[#141414] font-semibold text-[32px] leading-[100%] tracking-[0%] text-center">
+              Complete Your Profile
+            </p>
+            <p className="text-[#666666] mt-[12px] font-medium text-[14px] leading-[100%] tracking-[0%] text-center">
+              You need to fill in your profile details before enrolling in this course.
+            </p>
+            <div className="flex gap-[8px] w-full mt-[32px]">
+              <button
+                type="button"
+                onClick={() => setShowCompleteProfileModal(false)}
+                className="flex-1 h-[47px] rounded-[10px] border-[2px] border-[#958FEF] text-[#4F46E5] font-medium text-[16px] leading-[24px] cursor-pointer hover:bg-[#EEEDFC] active:bg-[#DDDBFA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#958FEF] transition-colors duration-300 ease-out"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCompleteProfileModal(false);
+                  onCompleteProfileClick();
+                }}
+                className="flex-1 h-[47px] rounded-[10px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out text-white font-medium text-[16px] leading-[24px] cursor-pointer"
+              >
+                Complete Profile
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

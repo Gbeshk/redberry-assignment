@@ -65,13 +65,14 @@ function HeroSlider() {
                       {slide.subtitle}
                     </h2>
                   )}
-                  <div
+                  <button
+                    type="button"
                     onClick={() => router.push("/courses")}
-                    className={`bg-[#4F46E5] ${!slide.subtitle ? "mt-[81px]" : "mt-[40px]"} h-[64px] flex items-center justify-center rounded-[8px] font-medium text-[20px] leading-none tracking-normal text-white cursor-pointer`}
+                    className={`bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out ${!slide.subtitle ? "mt-[81px]" : "mt-[40px]"} h-[64px] flex items-center justify-center rounded-[8px] font-medium text-[20px] leading-none tracking-normal text-white cursor-pointer`}
                     style={{ width: `${btnWidths[index]}px` }}
                   >
                     {slide.btnText}
-                  </div>
+                  </button>
                 </div>
 
                 <div className="flex h-[54px] items-center justify-between mt-[31px]">

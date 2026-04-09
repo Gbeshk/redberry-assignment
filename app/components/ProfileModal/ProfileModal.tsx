@@ -7,6 +7,8 @@ import EditNameIcon from "../icons/EditNameIcon";
 import DoneIcon from "../icons/DoneIcon";
 import ArrowDownIcon from "../icons/ArrowDownIcon";
 import UploadPhotoIcon from "../icons/UploadPhotoIcon";
+import { formatFileSize } from "../../utils/formatFileSize";
+
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -161,7 +163,7 @@ export default function ProfileModal({
     >
       <div
         className="bg-white rounded-[16px] relative"
-        style={{ width: "460px", height: "730px" }}
+        style={{ width: "460px", minHeight: "730px" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div
@@ -171,7 +173,7 @@ export default function ProfileModal({
           <CloseSvg />
         </div>
 
-        <div className="px-[50px]">
+        <div className="px-[50px] pb-[50px]">
           <p className="mt-[49px]  items-center justify-center flex h-[39px] text-[#141414] font-semibold text-[32px] leading-[100%] tracking-[0%] text-center">
             Profile
           </p>
@@ -194,7 +196,7 @@ export default function ProfileModal({
               <div
                 className="absolute bottom-0 right-0 w-[15px] h-[15px] rounded-full"
                 style={{
-                  backgroundColor: "#F4A316",
+                  backgroundColor: profileComplete ? "#1DC31D" : "#F4A316",
                   border: "2px solid white",
                 }}
               />
@@ -220,15 +222,15 @@ export default function ProfileModal({
                 type="text"
                 placeholder="Full Name"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full border-[1.5px] h-[48px] border-[#D1D1D1] rounded-[8px] p-[12px] pr-[40px] text-[14px] font-medium leading-[100%] tracking-[0%] placeholder:text-[#8A8A8A] focus:outline-none focus:ring-0"
+                onChange={(e) => { setFullName(e.target.value); if (fullNameError) setFullNameError(""); }}
+                className={`w-full border-[1.5px] h-[48px] rounded-[8px] p-[12px] pr-[40px] text-[14px] font-medium leading-[100%] tracking-[0%] caret-[#8A8A8A] placeholder:text-[#8A8A8A] placeholder:font-medium hover:placeholder:text-[#D1D1D1] focus:placeholder:text-[#F5F5F5] focus:outline-none focus:ring-0 transition-colors duration-200 ${fullNameError ? "border-[#F4161A] text-[#F4161A]" : "border-[#D1D1D1] text-[#3D3D3D] hover:border-[#ADADAD] focus:border-[#8A8A8A]"}`}
               />
               <div className="absolute right-[12px] top-1/2 -translate-y-1/2">
                 <EditNameIcon />
               </div>
             </div>
             {fullNameError && (
-              <p className="mt-[6px] text-[12px] font-medium text-[#EF4444]">
+              <p className="mt-[4px] text-[12px] font-normal leading-none tracking-normal text-[#F4161A] truncate">
                 {fullNameError}
               </p>
             )}
@@ -253,23 +255,23 @@ export default function ProfileModal({
           <div className="flex gap-[8px] mt-[12px]">
             <div className="flex flex-col w-[267px]">
               <label className="text-sm font-medium">Mobile Number</label>
-              <div className="relative mt-[8px] flex items-center border-[1.5px] border-[#D1D1D1] rounded-[8px] h-[48px] overflow-hidden">
-                <span className="pl-[12px] pr-[4px] text-[14px] font-medium text-[#D1D1D1] h-full flex items-center shrink-0">
+              <div className={`group relative mt-[8px] flex items-center border-[1.5px] rounded-[8px] h-[48px] overflow-hidden transition-colors duration-200 ${mobileError ? "border-[#F4161A]" : "border-[#D1D1D1] hover:border-[#ADADAD] focus-within:border-[#8A8A8A]"}`}>
+                <span className={`pl-[12px] pr-[8px] mr-[8px] text-[14px] font-medium h-full flex items-center shrink-0 border-r transition-colors duration-200 ${mobileError ? "text-[#F4161A] border-[#F4161A]" : "text-[#8A8A8A] border-[#D1D1D1] group-hover:text-[#ADADAD] group-hover:border-[#ADADAD] group-focus-within:text-[#525252] group-focus-within:border-[#8A8A8A]"}`}>
                   +995
                 </span>
                 <input
                   type="text"
                   placeholder="Mobile Number"
                   value={mobileNumber}
-                  onChange={(e) => setMobileNumber(e.target.value)}
-                  className="flex-1 h-full  pr-[40px] text-[14px] font-medium leading-[100%] tracking-[0%] placeholder:text-[#8A8A8A] focus:outline-none focus:ring-0"
+                  onChange={(e) => { setMobileNumber(e.target.value); if (mobileError) setMobileError(""); }}
+                  className={`flex-1 h-full pr-[40px] text-[14px] font-medium leading-[100%] tracking-[0%] caret-[#8A8A8A] placeholder:text-[#8A8A8A] placeholder:font-medium hover:placeholder:text-[#D1D1D1] focus:placeholder:text-[#F5F5F5] focus:outline-none focus:ring-0 ${mobileError ? "text-[#F4161A]" : "text-[#3D3D3D]"}`}
                 />
                 <div className="absolute right-[12px] top-1/2 -translate-y-1/2">
                   <EditNameIcon />
                 </div>
               </div>
               {mobileError && (
-                <p className="mt-[6px] text-[12px] font-medium text-[#EF4444]">
+                <p className="mt-[4px] text-[12px] font-normal leading-none tracking-normal text-[#F4161A] truncate">
                   {mobileError}
                 </p>
               )}
@@ -283,9 +285,10 @@ export default function ProfileModal({
                   onChange={(e) => {
                     setAge(e.target.value);
                     setIsAgeOpen(false);
+                    if (ageError) setAgeError("");
                   }}
                   onBlur={() => setIsAgeOpen(false)}
-                  className="w-full border-[1.5px] border-[#D1D1D1] rounded-[8px] h-[48px] pl-[12px] pr-[36px] text-[14px] font-medium leading-[100%] tracking-[0%] text-[#8A8A8A] focus:outline-none focus:ring-0 appearance-none bg-white cursor-pointer"
+                  className="w-full border-[1.5px] border-[#D1D1D1] hover:border-[#ADADAD] focus:border-[#8A8A8A] rounded-[8px] h-[48px] pl-[12px] pr-[36px] text-[14px] font-medium leading-[100%] tracking-[0%] text-[#8A8A8A] focus:outline-none focus:ring-0 appearance-none bg-white cursor-pointer transition-colors duration-200"
                 >
                   <option value="" disabled>
                     Age
@@ -306,7 +309,7 @@ export default function ProfileModal({
                 </div>
               </div>
               {ageError && (
-                <p className="mt-[6px] text-[12px] font-medium text-[#EF4444]">
+                <p className="mt-[4px] text-[12px] font-normal leading-none tracking-normal text-[#F4161A] truncate">
                   {ageError}
                 </p>
               )}
@@ -317,18 +320,41 @@ export default function ProfileModal({
           <div className="flex flex-col mt-[12px]">
             <label className="text-sm font-medium">Upload Avatar</label>
             <div
-              className="mt-[8px] border-[1.5px] border-[#D1D1D1] h-[140px] rounded-[8px] flex items-center justify-center cursor-pointer "
-              style={{ width: "360px", height: "140px" }}
-              onClick={() =>
-                document.getElementById("profileAvatarInput")?.click()
-              }
+              className="avatar-upload-box mt-[8px] rounded-[8px] flex items-center justify-center cursor-pointer overflow-hidden"
+              tabIndex={0}
+              style={{
+                width: "360px",
+                height: "140px",
+                border: avatarPreview && avatarFile ? "1.5px solid #DDDBFA" : "1.5px solid #D1D1D1",
+                backgroundColor: avatarPreview && avatarFile ? "#EEEDFC" : "transparent",
+              }}
+              onClick={() => document.getElementById("profileAvatarInput")?.click()}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); document.getElementById("profileAvatarInput")?.click(); } }}
             >
-              {avatarPreview ? (
-                <img
-                  src={avatarPreview}
-                  alt="preview"
-                  className="w-full h-full object-cover"
-                />
+              {avatarPreview && avatarFile ? (
+                <div className="w-[240px] h-[54px] flex items-center gap-[10px]">
+                  <Image
+                    src={avatarPreview}
+                    alt="Avatar preview"
+                    className="w-[54px] h-[54px] rounded-[40px] object-cover flex-shrink-0"
+                    width={54}
+                    height={54}
+                  />
+                  <div className="h-[41px] min-w-0 flex-1">
+                    <p className="text-[#525252] h-[15px] flex items-center font-normal text-xs leading-none tracking-normal overflow-hidden">
+                      <span className="truncate block max-w-[140px]">{avatarFile.name}</span>
+                    </p>
+                    <p className="text-[#ADADAD] font-normal text-[10px] leading-none tracking-normal h-[12px] flex items-center">
+                      Size — {formatFileSize(avatarFile.size)}
+                    </p>
+                    <p
+                      className="h-[12px] flex items-center mt-[2px] text-[#4F46E5] font-medium text-[10px] leading-none tracking-normal underline decoration-solid underline-offset-[25%] decoration-[0px] cursor-pointer"
+                      onClick={(e) => { e.stopPropagation(); document.getElementById("profileAvatarInput")?.click(); }}
+                    >
+                      Change
+                    </p>
+                  </div>
+                </div>
               ) : (
                 <div className="flex flex-col items-center">
                   <UploadPhotoIcon />
@@ -346,19 +372,26 @@ export default function ProfileModal({
               <input
                 type="file"
                 id="profileAvatarInput"
-                accept="image/*"
+                accept=".jpg,.jpeg,.png,.webp"
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0] ?? null;
+                  if (!file) return;
+                  const allowed = ["image/jpeg", "image/png", "image/webp"];
+                  if (!allowed.includes(file.type)) {
+                    e.target.value = "";
+                    return;
+                  }
                   setAvatarFile(file);
-                  if (file) setAvatarPreview(URL.createObjectURL(file));
+                  setAvatarPreview(URL.createObjectURL(file));
                 }}
               />
             </div>
           </div>
 
-          <div
-            className="w-[360px] h-[47px] bg-[#4F46E5] rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white mt-[16px] cursor-pointer"
+          <button
+            type="button"
+            className="w-[360px] h-[47px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white mt-[16px] cursor-pointer"
             style={{
               opacity: isSubmitting ? 0.7 : 1,
               pointerEvents: isSubmitting ? "none" : "auto",
@@ -366,7 +399,7 @@ export default function ProfileModal({
             onClick={handleUpdate}
           >
             {isSubmitting ? "Saving..." : "Update Profile"}
-          </div>
+          </button>
         </div>
       </div>
     </div>
