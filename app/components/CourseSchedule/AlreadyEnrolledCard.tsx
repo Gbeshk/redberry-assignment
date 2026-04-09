@@ -27,8 +27,13 @@ export default function AlreadyEnrolledCard({
   onUnenroll: () => void;
 }) {
   const [isCompleted, setIsCompleted] = useState(enrollment.progress >= 100);
+  const [showCongrats, setShowCongrats] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [retaking, setRetaking] = useState(false);
+  const [rating, setRating] = useState<number | null>(null);
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
+  const [isRating, setIsRating] = useState(false);
+  const [ratingSubmitted, setRatingSubmitted] = useState(false);
 
   const schedule = enrollment.schedule;
   const days = schedule?.weeklySchedule?.label ?? "—";
@@ -61,6 +66,33 @@ export default function AlreadyEnrolledCard({
     }
   };
 
+  const handleRate = async (star: number) => {
+    if (ratingSubmitted || isRating) return;
+    setIsRating(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await fetch(
+        `https://api.redclass.redberryinternship.ge/api/courses/${enrollment.course?.id}/reviews`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ rating: star }),
+        },
+      );
+      if (res.ok || res.status === 422) {
+        setRating(star);
+        setRatingSubmitted(true);
+      }
+    } catch {
+    } finally {
+      setIsRating(false);
+    }
+  };
+
   const handleComplete = async () => {
     setCompleting(true);
     try {
@@ -75,7 +107,7 @@ export default function AlreadyEnrolledCard({
           },
         },
       );
-      if (res.ok) setIsCompleted(true);
+      if (res.ok) { setIsCompleted(true); setShowCongrats(true); }
     } catch {
     } finally {
       setCompleting(false);
@@ -146,6 +178,43 @@ export default function AlreadyEnrolledCard({
         />
       </div>
 
+      {isCompleted && (
+        <div className="mt-[32px]">
+          <p className="text-[#666666] font-medium text-[16px] leading-none tracking-normal mb-[12px]">
+            {ratingSubmitted ? "Thanks for your rating!" : "Rate this course"}
+          </p>
+          <div className="flex gap-[8px]">
+            {[1, 2, 3, 4, 5].map((star) => {
+              const filled = ratingSubmitted
+                ? star <= (rating ?? 0)
+                : star <= (hoverRating ?? 0);
+              return (
+                <button
+                  key={star}
+                  type="button"
+                  disabled={ratingSubmitted || isRating}
+                  className="transition-transform duration-150 disabled:cursor-default cursor-pointer hover:scale-110 focus-visible:outline-none focus-visible:scale-110"
+                  onClick={() => handleRate(star)}
+                  onMouseEnter={() => !ratingSubmitted && setHoverRating(star)}
+                  onMouseLeave={() => !ratingSubmitted && setHoverRating(null)}
+                >
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+                      fill={filled ? "#F4A316" : "#D1D1D1"}
+                      stroke={filled ? "#F4A316" : "#D1D1D1"}
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {isCompleted ? (
         <button
           type="button"
@@ -179,6 +248,37 @@ export default function AlreadyEnrolledCard({
             />
           </svg>
         </button>
+      )}
+      {showCongrats && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ backgroundColor: "#00000040" }}
+          onClick={() => setShowCongrats(false)}
+        >
+          <div
+            className="bg-white w-[460px] rounded-[16px] p-[50px] flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-[72px] h-[72px] rounded-full bg-[#1DC31D1A] flex items-center justify-center">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                <path d="M20 6L9 17L4 12" stroke="#1DC31D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <p className="text-[#141414] font-semibold text-[32px] leading-[100%] tracking-[0%] text-center mt-[24px]">
+              Congratulations!
+            </p>
+            <p className="text-[#666666] mt-[12px] font-medium text-[14px] leading-[100%] tracking-[0%] text-center">
+              You have successfully completed this course.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowCongrats(false)}
+              className="w-full h-[47px] mt-[32px] rounded-[10px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out text-white font-medium text-[16px] leading-[24px] cursor-pointer"
+            >
+              Done
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -113,6 +113,8 @@ export default function ProfileModal({
         setProfileComplete(u.profileComplete ?? false);
         setAvatarFile(null);
         setAvatarPreview(null);
+        localStorage.setItem("userData", JSON.stringify(u));
+        window.dispatchEvent(new Event("auth-updated"));
         onProfileUpdated?.();
         onClose();
       }

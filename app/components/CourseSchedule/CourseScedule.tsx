@@ -190,6 +190,11 @@ function CourseScedule({
   const checkAuth = () => {
     const token = localStorage.getItem("authToken");
     setIsLoggedIn(!!token);
+    try {
+      const stored = localStorage.getItem("userData");
+      if (stored) setProfileComplete(!!JSON.parse(stored).profileComplete);
+    } catch {}
+
 
     if (token) {
       fetch("https://api.redclass.redberryinternship.ge/api/enrollments", {
@@ -376,7 +381,13 @@ function CourseScedule({
   function getSessionSeatsNode(staticKey: string): React.ReactNode {
     if (sessionTypes.length === 0) return STATIC_SESSION_SEATS[staticKey];
     const apiSession = matchSession(staticKey, sessionTypes);
-    if (!apiSession || apiSession.availableSeats === 0) return null;
+    if (!apiSession) return null;
+    if (apiSession.availableSeats === 0)
+      return (
+        <p className="font-medium text-[12px] text-[#F4161A] leading-none tracking-normal">
+          No Seats Available
+        </p>
+      );
     return sessionSeatsLabel(apiSession);
   }
 
