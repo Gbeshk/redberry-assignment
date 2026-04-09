@@ -8,6 +8,8 @@ import MarketingSvg from "@/app/components/icons/MarketingSvg";
 import BusinessSvg from "@/app/components/icons/BusinessSvg";
 import DataScienceSvg from "@/app/components/icons/DataScienceSvg";
 import { useRouter } from "next/navigation";
+import ClearFiltersIcon from "@/app/components/icons/ClearFiltersIcon";
+import ArrowNavigation from "@/app/components/icons/ArrowNavigation";
 
 interface Category {
   id: number;
@@ -102,19 +104,7 @@ function Courses() {
         >
           Home
         </p>
-        <svg
-          className="ml-[4px]"
-          width="12"
-          height="24"
-          viewBox="0 0 12 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M2.45199 6.58023L3.51299 5.52024L9.29199 11.2972C9.38514 11.3898 9.45907 11.4999 9.50952 11.6211C9.55997 11.7424 9.58594 11.8724 9.58594 12.0037C9.58594 12.1351 9.55997 12.2651 9.50952 12.3863C9.45907 12.5076 9.38514 12.6177 9.29199 12.7102L3.51299 18.4902L2.45299 17.4302L7.87699 12.0052L2.45199 6.58023Z"
-            fill="#666666"
-          />
-        </svg>
+        <ArrowNavigation />
         <p className="flex items-center ml-[10px] text-[#736BEA] font-medium text-[18px] leading-[100%] tracking-[0%] justify-center w-[64px] h-[24px]">
           Browse
         </p>
@@ -133,22 +123,7 @@ function Courses() {
               <p className="flex items-center justify-center group-hover:text-[#4F46E5] w-[116px] text-[#8A8A8A] font-medium text-[16px] leading-[24px] tracking-[0%]">
                 Clear All Filters
               </p>
-              <svg
-                className="group-hover:stroke-[#4F46E5]"
-                width="12"
-                height="12"
-                viewBox="0 0 12 12"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M5.75 5.75L0.75 0.75M5.75 5.75L10.75 10.75M5.75 5.75L10.75 0.75M5.75 5.75L0.75 10.75"
-                  className="stroke-[#8A8A8A] group-hover:stroke-[#4F46E5]"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <ClearFiltersIcon />
             </div>
           </div>
 

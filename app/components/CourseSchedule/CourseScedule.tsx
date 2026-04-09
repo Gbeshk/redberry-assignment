@@ -11,6 +11,9 @@ import InPersonIcon from "../icons/InPersonIcon";
 import LocationIcon from "../icons/LocationIcon";
 import WarningIcon from "../icons/WarningIcon";
 import HybridIcon from "../icons/HybridIcon";
+import AlreadyEnrolledCard from "./AlreadyEnrolledCard";
+import ConflictModal from "./ConflictModal";
+import AuthWarningBanner from "./AuthWarningBanner";
 
 interface WeeklySchedule {
   id: number;
@@ -33,63 +36,35 @@ interface SessionType {
   availableSeats: number;
   location?: string;
 }
+interface EnrollmentDetail {
+  id: number;
+  progress: number;
+  course?: { id: number };
+  courseSchedule?: {
+    weeklySchedule?: { label: string };
+    timeSlot?: { label: string; startTime?: string; endTime?: string };
+    sessionType?: { name: string; location?: string };
+  };
+}
 interface CourseScheduleProps {
   courseId: string;
   onSignInClick: () => void;
+  onCompleteProfileClick: () => void;
 }
-
 const STATIC_SCHEDULES = [
-  { key: "mon-wed", label: "Mon - Wed" },
-  { key: "tue-thu", label: "Tue - Thu" },
-  { key: "wed-fri", label: "Wed - Fri" },
-  { key: "weekend", label: "Weekend" },
+  { key: "mon-wed", label: "Monday - Wednesday", short: "Mon - Wed" },
+  { key: "tue-thu", label: "Tuesday - Thursday", short: "Tue - Thu" },
+  { key: "fri-sat", label: "Friday - Saturday", short: "Fri - Sat" },
+  { key: "weekend", label: "Weekend Only", short: "Weekend" },
 ];
-
-const STATIC_TIME_SLOTS = [
-  {
-    key: "morning",
-    label: "Morning",
-    sublabel: "9:00 AM – 12:00 PM",
-    icon: "morning",
-  },
-  {
-    key: "afternoon",
-    label: "Afternoon",
-    sublabel: "12:00 PM – 6:00 PM",
-    icon: "afternoon",
-  },
-  {
-    key: "evening",
-    label: "Evening",
-    sublabel: "6:00 PM – 9:00 PM",
-    icon: "evening",
-  },
-];
-
-const STATIC_SESSION_TYPES = [
-  { key: "online", label: "Online", icon: "online" },
-  { key: "in_person", label: "In-Person", icon: "in_person" },
-  { key: "hybrid", label: "Hybrid", icon: "hybrid" },
-];
-
-// Matches a static schedule label to an API-returned WeeklySchedule
 function matchSchedule(
   staticLabel: string,
   apiSchedules: WeeklySchedule[],
 ): WeeklySchedule | undefined {
-  const labelMap: Record<string, string[]> = {
-    "Mon - Wed": ["monday - wednesday", "mon - wed"],
-    "Tue - Thu": ["tuesday - thursday", "tue - thu"],
-    "Wed - Fri": ["wednesday - friday", "wed - fri"],
-    Weekend: ["weekend only", "weekend"],
-  };
-  const candidates = labelMap[staticLabel] ?? [staticLabel.toLowerCase()];
-  return apiSchedules.find((s) =>
-    candidates.some((c) => s.label.toLowerCase().includes(c)),
+  return apiSchedules.find(
+    (s) => s.label.toLowerCase() === staticLabel.toLowerCase(),
   );
 }
-
-// Matches a static time slot key to an API-returned TimeSlot
 function matchTimeSlot(
   staticKey: string,
   apiSlots: TimeSlot[],
@@ -97,7 +72,6 @@ function matchTimeSlot(
   return apiSlots.find((s) => s.label.toLowerCase().includes(staticKey));
 }
 
-// Matches a static session key to an API-returned SessionType
 function matchSession(
   staticKey: string,
   apiSessions: SessionType[],
@@ -133,12 +107,47 @@ function sessionLocationLabel(session: SessionType): string {
   return session.location ?? "Chavchavadze St.34";
 }
 
-function CourseScedule({ courseId, onSignInClick }: CourseScheduleProps) {  // --- API state ---
+const STATIC_SESSION_PRICES: Record<string, string> = {
+  online: "Included",
+  in_person: "+ $30",
+  hybrid: "+ $50",
+};
+
+const STATIC_SESSION_SEATS: Record<string, React.ReactNode> = {
+  online: (
+    <p className="text-[#3D3D3D] font-medium text-[12px] leading-none tracking-normal">
+      50 Seats Available
+    </p>
+  ),
+  in_person: (
+    <div className="flex items-center gap-[4px]">
+      <WarningIcon />
+      <p className="font-medium text-[12px] text-[#F4A316] leading-none tracking-normal">
+        Only 3 Seats Remaining
+      </p>
+    </div>
+  ),
+  hybrid: (
+    <p className="text-[#3D3D3D] font-medium text-[12px] leading-none tracking-normal">
+      50 Seats Available
+    </p>
+  ),
+};
+
+const STATIC_SESSION_LOCATIONS: Record<string, string> = {
+  in_person: "Chavchavadze St.34",
+  hybrid: "Chavchavadze St.34",
+};
+
+function CourseScedule({
+  courseId,
+  onSignInClick,
+  onCompleteProfileClick,
+}: CourseScheduleProps) {
   const [weeklySchedules, setWeeklySchedules] = useState<WeeklySchedule[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
 
-  // --- Selection state ---
   const [selectedScheduleKey, setSelectedScheduleKey] = useState<string | null>(
     null,
   );
@@ -154,8 +163,59 @@ function CourseScedule({ courseId, onSignInClick }: CourseScheduleProps) {  // -
   const [selectedSessionKey, setSelectedSessionKey] = useState<string | null>(
     null,
   );
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => !!localStorage.getItem("authToken"),
+  );
+  const [profileComplete, setProfileComplete] = useState(() => {
+    try {
+      const stored = localStorage.getItem("userData");
+      if (stored) {
+        const u = JSON.parse(stored);
+        return !!u?.profileComplete;
+      }
+    } catch {}
+    return false;
+  });
+  const [enrollmentDetail, setEnrollmentDetail] =
+    useState<EnrollmentDetail | null>(null);
 
-  // --- Open/close state for each section ---
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [enrollmentChecked, setEnrollmentChecked] = useState(
+    () => !localStorage.getItem("authToken"),
+  );
+
+  const checkAuth = () => {
+    const token = localStorage.getItem("authToken");
+    setIsLoggedIn(!!token);
+
+    if (token) {
+      fetch("https://api.redclass.redberryinternship.ge/api/enrollments", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      })
+        .then((r) => r.json())
+        .then((json) => {
+          const enrollments: EnrollmentDetail[] = json.data ?? [];
+          const match = enrollments.find(
+            (e) => String(e.course?.id) === String(courseId),
+          );
+          if (match) {
+            setIsEnrolled(true);
+            setEnrollmentDetail(match);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setEnrollmentChecked(true));
+    }
+  };
+
+  useEffect(() => {
+    checkAuth();
+    window.addEventListener("auth-updated", checkAuth);
+    return () => window.removeEventListener("auth-updated", checkAuth);
+  }, []);
   const [scheduleOpen, setScheduleOpen] = useState(true);
   const [timeSlotOpen, setTimeSlotOpen] = useState(false);
   const [sessionOpen, setSessionOpen] = useState(false);
@@ -204,24 +264,6 @@ function CourseScedule({ courseId, onSignInClick }: CourseScheduleProps) {  // -
   }, [courseId, selectedScheduleId, selectedTimeSlotId]);
 
   // --- Handlers ---
-  function handleScheduleClick(staticLabel: string) {
-    const match = matchSchedule(staticLabel, weeklySchedules);
-    if (!match) return; // not available, do nothing
-    if (selectedScheduleKey === staticLabel) {
-      // deselect
-      setSelectedScheduleKey(null);
-      setSelectedScheduleId(null);
-    } else {
-      setSelectedScheduleKey(staticLabel);
-      setSelectedScheduleId(match.id);
-      setSelectedTimeSlotKey(null);
-      setSelectedTimeSlotId(null);
-      setSelectedSessionKey(null);
-      setTimeSlotOpen(true);
-      setSessionOpen(false);
-    }
-  }
-
   function handleTimeSlotClick(staticKey: string) {
     const match = matchTimeSlot(staticKey, timeSlots);
     if (!match) return;
@@ -244,11 +286,6 @@ function CourseScedule({ courseId, onSignInClick }: CourseScheduleProps) {  // -
   }
 
   // --- Availability helpers ---
-  function isScheduleAvailable(staticLabel: string): boolean {
-    if (weeklySchedules.length === 0) return true; // loading, show as available
-    return !!matchSchedule(staticLabel, weeklySchedules);
-  }
-
   function isTimeSlotAvailable(staticKey: string): boolean {
     if (timeSlots.length === 0) return false;
     return !!matchTimeSlot(staticKey, timeSlots);
@@ -284,29 +321,6 @@ function CourseScedule({ courseId, onSignInClick }: CourseScheduleProps) {  // -
   function handleToggleSession() {
     if (selectedTimeSlotId === null) return; // gate: must pick a time slot first
     setSessionOpen((o) => !o);
-  }
-
-  // --- Schedule div styles ---
-  function scheduleStyle(staticLabel: string) {
-    const available = isScheduleAvailable(staticLabel);
-    const selected = selectedScheduleKey === staticLabel;
-
-    if (!available) {
-      return {
-        container:
-          "text-[#D1D1D1] h-full font-semibold text-[16px] leading-none tracking-normal text-centerh-full border-[1px] border-[#D1D1D1] rounded-[12px] flex items-center justify-center bg-[#F5F5F5] w-full cursor-default",
-      };
-    }
-    if (selected) {
-      return {
-        container:
-          "text-[#130E67] h-full font-semibold text-[16px] leading-none tracking-normal text-centerh-full border-[2px] border-[#736BEA] rounded-[12px] flex items-center justify-center bg-white w-full cursor-pointer",
-      };
-    }
-    return {
-      container:
-        "text-[#292929] h-full font-semibold text-[16px] leading-none tracking-normal text-centerh-full border-[1px] border-[#D1D1D1] rounded-[12px] flex items-center justify-center bg-white w-full cursor-pointer",
-    };
   }
 
   // --- Time slot div styles ---
@@ -349,39 +363,6 @@ function CourseScedule({ courseId, onSignInClick }: CourseScheduleProps) {  // -
   function sessionPriceColor(staticKey: string) {
     return isSessionAvailable(staticKey) ? "#736BEA" : "#D1D1D1";
   }
-
-  // --- Session price display (static fallback when no API data yet) ---
-  const STATIC_SESSION_PRICES: Record<string, string> = {
-    online: "Included",
-    in_person: "+ $30",
-    hybrid: "+ $50",
-  };
-
-  const STATIC_SESSION_SEATS: Record<string, React.ReactNode> = {
-    online: (
-      <p className="text-[#3D3D3D] font-medium text-[12px] leading-none tracking-normal">
-        50 Seats Available
-      </p>
-    ),
-    in_person: (
-      <div className="flex items-center gap-[4px]">
-        <WarningIcon />
-        <p className="font-medium text-[12px] text-[#F4A316] leading-none tracking-normal">
-          Only 3 Seats Remaining
-        </p>
-      </div>
-    ),
-    hybrid: (
-      <p className="text-[#3D3D3D] font-medium text-[12px] leading-none tracking-normal">
-        50 Seats Available
-      </p>
-    ),
-  };
-
-  const STATIC_SESSION_LOCATIONS: Record<string, string> = {
-    in_person: "Chavchavadze St.34",
-    hybrid: "Chavchavadze St.34",
-  };
 
   function getSessionPriceLabel(staticKey: string): string {
     const apiSession = matchSession(staticKey, sessionTypes);
@@ -453,15 +434,20 @@ function CourseScedule({ courseId, onSignInClick }: CourseScheduleProps) {  // -
       }
 
       if (res.status === 201) {
-        // success — handle however you like (redirect, toast, etc.)
-        alert("Enrolled successfully!");
+        const json = await res.json();
+        setEnrollmentDetail(json.data ?? null); // if API returns the enrollment
+        setIsEnrolled(true);
         return;
       }
     } finally {
       setEnrolling(false);
     }
   }
+  if (!enrollmentChecked) return null;
 
+  if (isEnrolled && enrollmentDetail) {
+    return <AlreadyEnrolledCard enrollment={enrollmentDetail} />;
+  }
   return (
     <>
       <div className="w-[530px]">
@@ -486,22 +472,47 @@ function CourseScedule({ courseId, onSignInClick }: CourseScheduleProps) {  // -
               <ArrowIcon />
             </div>
           </div>
-
           {scheduleOpen && (
             <div className="w-full h-[91px] mt-[18px] flex items-center justify-between gap-[12px]">
-              {STATIC_SCHEDULES.map(({ key, label }) => (
-                <div
-                  key={key}
-                  className={scheduleStyle(label).container}
-                  onClick={() => handleScheduleClick(label)}
-                >
-                  {label}
-                </div>
-              ))}
+              {STATIC_SCHEDULES.map(({ key, label, short }) => {
+                const available =
+                  weeklySchedules.length === 0 ||
+                  !!matchSchedule(label, weeklySchedules);
+                const selected = selectedScheduleKey === key;
+                return (
+                  <div
+                    key={key}
+                    className={
+                      !available
+                        ? "text-[#D1D1D1] h-full font-semibold text-[16px] leading-none border-[1px] border-[#D1D1D1] rounded-[12px] flex items-center justify-center bg-[#F5F5F5] w-full cursor-default"
+                        : selected
+                          ? "text-[#130E67] h-full font-semibold text-[16px] leading-none border-[2px] border-[#736BEA] rounded-[12px] flex items-center justify-center bg-white w-full cursor-pointer"
+                          : "text-[#292929] h-full font-semibold text-[16px] leading-none border-[1px] border-[#D1D1D1] rounded-[12px] flex items-center justify-center bg-white w-full cursor-pointer"
+                    }
+                    onClick={() => {
+                      if (!available) return;
+                      if (selectedScheduleKey === key) {
+                        setSelectedScheduleKey(null);
+                        setSelectedScheduleId(null);
+                      } else {
+                        const match = matchSchedule(label, weeklySchedules);
+                        setSelectedScheduleKey(key);
+                        setSelectedScheduleId(match?.id ?? null);
+                        setSelectedTimeSlotKey(null);
+                        setSelectedTimeSlotId(null);
+                        setSelectedSessionKey(null);
+                        setTimeSlotOpen(true);
+                        setSessionOpen(false);
+                      }
+                    }}
+                  >
+                    {short}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
-
         {/* Time Slot */}
         <div className="w-[530px] mt-[32px]">
           <div
@@ -594,7 +605,6 @@ function CourseScedule({ courseId, onSignInClick }: CourseScheduleProps) {  // -
             </div>
           )}
         </div>
-
         {/* Session Type */}
         <div className="w-[530px] mt-[32px]">
           <div
@@ -714,7 +724,6 @@ function CourseScedule({ courseId, onSignInClick }: CourseScheduleProps) {  // -
             </div>
           )}
         </div>
-
         {/* Price Summary */}
         <div className="w-[530px] h-[306px] bg-white rounded-[12px] mt-[32px] flex items-center flex-col p-[40px]">
           <div className="w-[450px] h-[39px] flex items-center justify-between">
@@ -757,50 +766,34 @@ function CourseScedule({ courseId, onSignInClick }: CourseScheduleProps) {  // -
             {enrolling ? "Enrolling..." : "Enroll Now"}
           </div>
         </div>
+        {!isLoggedIn && (
+          <AuthWarningBanner
+            title="Authentication Required"
+            description="You need sign in to your profile before enrolling in this course."
+            buttonLabel="Sign In"
+            buttonWidth="w-[91px]"
+            onButtonClick={onSignInClick}
+          />
+        )}
+        {isLoggedIn && !profileComplete && (
+          <AuthWarningBanner
+            title="Complete Your Profile"
+            description="You need to fill in your profile details before enrolling in this course."
+            buttonLabel="Complete"
+            buttonWidth="w-[110px]"
+            onButtonClick={onCompleteProfileClick}
+          />
+        )}
       </div>
       {conflictData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-[16px] p-[40px] w-[520px] flex flex-col gap-[24px]">
-            <p className="text-[#130E67] font-semibold text-[22px] leading-snug">
-              Schedule Conflict Detected
-            </p>
-            <p className="text-[#525252] text-[16px]">
-              This course conflicts with an existing enrollment:
-            </p>
-            <div className="flex flex-col gap-[12px]">
-              {conflictData.conflicts.map((c, i) => (
-                <div key={i} className="bg-[#F5F5F5] rounded-[12px] p-[16px]">
-                  <p className="text-[#292929] font-semibold text-[15px]">
-                    {c.conflictingCourseName}
-                  </p>
-                  <p className="text-[#8A8A8A] text-[13px] mt-[4px]">
-                    {c.schedule}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <p className="text-[#525252] text-[14px]">
-              Do you want to enroll anyway and override the conflict?
-            </p>
-            <div className="flex gap-[12px]">
-              <button
-                className="flex-1 h-[52px] rounded-[12px] border-[2px] border-[#736BEA] text-[#736BEA] font-semibold text-[16px] cursor-pointer"
-                onClick={() => setConflictData(null)}
-              >
-                Cancel
-              </button>
-              <button
-                className="flex-1 h-[52px] rounded-[12px] bg-[#736BEA] text-white font-semibold text-[16px] cursor-pointer"
-                onClick={async () => {
-                  setConflictData(null);
-                  await handleEnroll(true);
-                }}
-              >
-                Enroll Anyway
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConflictModal
+          conflictData={conflictData}
+          onCancel={() => setConflictData(null)}
+          onConfirm={async () => {
+            setConflictData(null);
+            await handleEnroll(true);
+          }}
+        />
       )}
     </>
   );

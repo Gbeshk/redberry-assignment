@@ -17,19 +17,27 @@ interface Enrollment {
   };
 }
 
-export default function CurrentCourses() {
+interface CurrentCoursesProps {
+  onSignInClick?: () => void;
+  onSeeAllClick?: () => void;
+}
+
+export default function CurrentCourses({ onSignInClick, onSeeAllClick }: CurrentCoursesProps) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  useEffect(() => {
+
+  const fetchEnrollments = () => {
     const token = localStorage.getItem("authToken");
     if (!token) {
+      setIsLoggedIn(false);
       setLoading(false);
       return;
     }
 
     setIsLoggedIn(true);
+    setLoading(true);
 
     fetch("https://api.redclass.redberryinternship.ge/api/enrollments", {
       headers: {
@@ -43,6 +51,12 @@ export default function CurrentCourses() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchEnrollments();
+    window.addEventListener("auth-updated", fetchEnrollments);
+    return () => window.removeEventListener("auth-updated", fetchEnrollments);
   }, []);
   if (loading) return null;
   if (isLoggedIn && enrollments.length === 0) return null;
@@ -63,7 +77,10 @@ export default function CurrentCourses() {
         <p className="text-[#3D3D3D] font-medium text-[18px] leading-[100%] tracking-[0%]">
           Pick up where you left
         </p>
-        <p className="text-[#4F46E5] font-medium text-[20px] leading-[100%] tracking-[0%] underline decoration-solid underline-offset-[3px] decoration-0">
+        <p
+          onClick={isLoggedIn ? onSeeAllClick : onSignInClick}
+          className="text-[#4F46E5] font-medium text-[20px] leading-[100%] tracking-[0%] underline decoration-solid underline-offset-[3px] decoration-0 cursor-pointer"
+        >
           See All
         </p>
       </div>
@@ -99,7 +116,10 @@ export default function CurrentCourses() {
             <p className="h-[24px] flex items-center text-[#0A0836] mt-[12px] font-medium text-[16px] leading-[24px] tracking-[0%]">
               Sign in to track your learning progress
             </p>
-            <div className="w-[83px] h-[42px] rounded-[8px] bg-[#4F46E5] mt-[24px] text-[#F5F5F5] font-medium text-[16px] leading-[24px] tracking-[0%] text-center flex items-center justify-center">
+            <div
+              onClick={onSignInClick}
+              className="w-[83px] h-[42px] rounded-[8px] bg-[#4F46E5] mt-[24px] text-[#F5F5F5] font-medium text-[16px] leading-[24px] tracking-[0%] text-center flex items-center justify-center cursor-pointer"
+            >
               Log In
             </div>
           </div>

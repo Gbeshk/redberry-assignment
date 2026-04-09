@@ -122,7 +122,10 @@ export default function SignInModal({
         );
       } else {
         const token = (data as { data?: { token?: string } })?.data?.token;
-        if (token) localStorage.setItem("authToken", token);
+        if (token) {
+          localStorage.setItem("authToken", token);
+          window.dispatchEvent(new Event("auth-updated"));
+        }
         handleClose();
         onSuccess?.();
       }

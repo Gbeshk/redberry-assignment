@@ -7,11 +7,13 @@ import SignInModal from "./components/SignInModal/SignInModal";
 import ProfileModal from "./components/ProfileModal/ProfileModal";
 import CurrentCourses from "./components/CurrentCourses/CurrentCourses";
 import HeroSlider from "./components/HeroSlider/HeroSlider";
+import EnrolledCoursesDrawer from "./components/EnrolledCoursesDrawer/EnrolledCoursesDrawer";
 
 export default function Home() {
   const [showSignUpModal, setShowSignUpModal] = useState(false);
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showEnrolledDrawer, setShowEnrolledDrawer] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState<{ avatar?: string } | null>(null);
 
@@ -73,12 +75,19 @@ export default function Home() {
         onClose={() => setShowProfileModal(false)}
       />
 
+      <EnrolledCoursesDrawer
+        isOpen={showEnrolledDrawer}
+        onClose={() => setShowEnrolledDrawer(false)}
+      />
       <HeroSlider />
       <div
         className={`flex ${isLoggedIn ? "flex-col-reverse" : "flex-col"}`}
       >
         <CoursesSection />
-        <CurrentCourses />
+        <CurrentCourses
+          onSignInClick={() => setShowSignInModal(true)}
+          onSeeAllClick={() => setShowEnrolledDrawer(true)}
+        />
       </div>
     </>
   );

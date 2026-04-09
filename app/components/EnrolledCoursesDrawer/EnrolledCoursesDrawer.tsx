@@ -50,7 +50,6 @@ export default function EnrolledCoursesDrawer({ isOpen, onClose }: Props) {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     if (!isOpen) return;
     setLoading(true);
@@ -195,7 +194,12 @@ export default function EnrolledCoursesDrawer({ isOpen, onClose }: Props) {
                       />
                     </div>
                   </div>
-                  <div className="w-[117px] h-[48px]  flex items-center justify-center rounded-[8px] border-[2px] border-[#958FEF]  font-medium text-base leading-6 tracking-normal text-[#4F46E5]">
+                  <div
+                    onClick={() => {
+                      router.push(`/courses/${enrollment.course.id}`);
+                    }}
+                    className="w-[117px] h-[48px]  flex items-center justify-center rounded-[8px] cursor-pointer border-[2px] border-[#958FEF]  font-medium text-base leading-6 tracking-normal text-[#4F46E5]"
+                  >
                     View
                   </div>
                 </div>

@@ -36,20 +36,27 @@ export default function ClientLayout({
         },
       );
       const json = await res.json();
-      setUserData(json.data);
-      localStorage.setItem("userData", JSON.stringify(json.data));
+      const u = json.data?.user ?? json.data;
+      setUserData(u);
+      localStorage.setItem("userData", JSON.stringify(u));
     } catch (e) {}
   };
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-    const storedUser = localStorage.getItem("userData");
     if (token) {
       setIsLoggedIn(true);
-      if (storedUser) {
-        setUserData(JSON.parse(storedUser));
-      }
+      refreshUser();
     }
+  }, []);
+
+  useEffect(() => {
+    const handleAuthUpdated = () => {
+      setIsLoggedIn(true);
+      refreshUser();
+    };
+    window.addEventListener("auth-updated", handleAuthUpdated);
+    return () => window.removeEventListener("auth-updated", handleAuthUpdated);
   }, []);
 
   return (
