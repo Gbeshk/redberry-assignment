@@ -47,7 +47,12 @@ export default function CurrentCourses({ onSignInClick, onSeeAllClick }: Current
     })
       .then((r) => r.json())
       .then((json) => {
-        setEnrollments((json.data ?? []).slice(0, 4));
+        const data = json.data ?? [];
+        if (data[0]) console.log("enrollment course:", data[0].course);
+        const sorted = data.sort(
+          (a: Enrollment, b: Enrollment) => b.progress - a.progress,
+        );
+        setEnrollments(sorted.slice(0, 3));
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -64,7 +69,7 @@ export default function CurrentCourses({ onSignInClick, onSeeAllClick }: Current
     ? [
         ...enrollments,
         ...Array(Math.max(0, 3 - enrollments.length)).fill(null),
-      ].slice(0, 3)
+      ]
     : [null, null, null];
 
   const blurClasses = ["blur-[20px]", "blur-[20px]", "blur-[10px]"];
@@ -118,7 +123,8 @@ export default function CurrentCourses({ onSignInClick, onSeeAllClick }: Current
             </p>
             <div
               onClick={onSignInClick}
-              className="w-[83px] h-[42px] rounded-[8px] bg-[#4F46E5] mt-[24px] text-[#F5F5F5] font-medium text-[16px] leading-[24px] tracking-[0%] text-center flex items-center justify-center cursor-pointer"
+              className="w-[83px] h-[42px] rounded-[8px] bg-[#4F46E5] mt-[24px] text-[#F5F5F5] font-medium text-[16px] leading-[24px] tracking-[0%] text-center flex items-center justify-center cursor-pointer transition-colors duration-300 ease-out hover:bg-[#281ED2] focus:bg-[#1E169D] focus:outline-none"
+              tabIndex={0}
             >
               Log In
             </div>
@@ -132,7 +138,9 @@ export default function CurrentCourses({ onSignInClick, onSeeAllClick }: Current
             "Advanced React & TypeScript Development";
           const instructor =
             enrollment?.course.instructor.name ?? "Marilyn Mango";
-          const rating = enrollment?.course.avgRating ?? 4.9;
+          const rating = enrollment?.course.avgRating
+            ? Math.round(enrollment.course.avgRating * 10) / 10
+            : null;
           const image = enrollment?.course.image ?? def_img;
           const progressWidth = (336 * progress) / 100;
 

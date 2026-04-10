@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import ConflictSvg from "../icons/ConflictSvg";
 
 interface ConflictData {
@@ -21,6 +22,11 @@ export default function ConflictModal({
   onCancel,
   onConfirm,
 }: ConflictModalProps) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
   const formatSchedule = (schedule: string): string => {
     const dayMap: Record<string, string> = {
       Monday: "Mon",
@@ -67,7 +73,7 @@ export default function ConflictModal({
     return `${formattedDays} at ${timePart}`;
   };
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "#00000040" }}>
       <div className="bg-white   w-[476px] min-h-[455px] rounded-[16px] flex items-center flex-col p-[60px] ">
         <ConflictSvg />
         <p className="text-[#3D3D3D] h-[39px] flex items-center  font-semibold text-3xl leading-none tracking-normal text-center mt-[24px]">

@@ -14,6 +14,8 @@ import HybridIcon from "../icons/HybridIcon";
 import AlreadyEnrolledCard from "./AlreadyEnrolledCard";
 import ConflictModal from "./ConflictModal";
 import AuthWarningBanner from "./AuthWarningBanner";
+import CompleteProfIcon from "../icons/CompleteProfIcon";
+import ConfirmedEnrollmentIcon from "../icons/ConfirmedEnrollmentIcon";
 
 interface WeeklySchedule {
   id: number;
@@ -39,6 +41,7 @@ interface SessionType {
 interface EnrollmentDetail {
   id: number;
   progress: number;
+  isRated?: boolean;
   course?: { id: number };
   courseSchedule?: {
     weeklySchedule?: { label: string };
@@ -48,6 +51,9 @@ interface EnrollmentDetail {
 }
 interface CourseScheduleProps {
   courseId: string;
+  courseTitle: string;
+  basePrice: number;
+  isRated: boolean;
   onSignInClick: () => void;
   onCompleteProfileClick: () => void;
 }
@@ -141,6 +147,9 @@ const STATIC_SESSION_LOCATIONS: Record<string, string> = {
 
 function CourseScedule({
   courseId,
+  courseTitle,
+  basePrice,
+  isRated,
   onSignInClick,
   onCompleteProfileClick,
 }: CourseScheduleProps) {
@@ -166,21 +175,19 @@ function CourseScedule({
   const [isLoggedIn, setIsLoggedIn] = useState(
     () => !!localStorage.getItem("authToken"),
   );
-  const [profileComplete, setProfileComplete] = useState(() => {
-    try {
-      const stored = localStorage.getItem("userData");
-      if (stored) {
-        const u = JSON.parse(stored);
-        return !!u?.profileComplete;
-      }
-    } catch {}
-    return false;
-  });
+  const [profileComplete, setProfileComplete] = useState(false);
+  const [profileChecked, setProfileChecked] = useState(
+    () => !localStorage.getItem("authToken"),
+  );
   const [enrollmentDetail, setEnrollmentDetail] =
     useState<EnrollmentDetail | null>(null);
-  const [showCompleteProfileModal, setShowCompleteProfileModal] = useState(false);
+  const [showCompleteProfileModal, setShowCompleteProfileModal] =
+    useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const handleSuccessDone = () => { setShowSuccessModal(false); setIsEnrolled(true); };
+  const handleSuccessDone = () => {
+    setShowSuccessModal(false);
+    setIsEnrolled(true);
+  };
 
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrollmentChecked, setEnrollmentChecked] = useState(
@@ -190,32 +197,50 @@ function CourseScedule({
   const checkAuth = () => {
     const token = localStorage.getItem("authToken");
     setIsLoggedIn(!!token);
-    try {
-      const stored = localStorage.getItem("userData");
-      if (stored) setProfileComplete(!!JSON.parse(stored).profileComplete);
-    } catch {}
-
 
     if (token) {
-      fetch("https://api.redclass.redberryinternship.ge/api/enrollments", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-      })
-        .then((r) => r.json())
-        .then((json) => {
-          const enrollments: EnrollmentDetail[] = json.data ?? [];
-          const match = enrollments.find(
-            (e) => String(e.course?.id) === String(courseId),
-          );
-          if (match) {
-            setIsEnrolled(true);
-            setEnrollmentDetail(match);
-          }
+      Promise.all([
+        fetch("https://api.redclass.redberryinternship.ge/api/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
         })
-        .catch(() => {})
-        .finally(() => setEnrollmentChecked(true));
+          .then((r) => r.json())
+          .then((json) => {
+            const u = json.data?.user ?? json.data;
+            if (u) {
+              setProfileComplete(!!u.profileComplete);
+              localStorage.setItem("userData", JSON.stringify(u));
+            }
+          })
+          .catch(() => {
+            try {
+              const stored = localStorage.getItem("userData");
+              if (stored)
+                setProfileComplete(!!JSON.parse(stored).profileComplete);
+            } catch {}
+          })
+          .finally(() => setProfileChecked(true)),
+        fetch("https://api.redclass.redberryinternship.ge/api/enrollments", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        })
+          .then((r) => r.json())
+          .then((json) => {
+            const enrollments: EnrollmentDetail[] = json.data ?? [];
+            const match = enrollments.find(
+              (e) => String(e.course?.id) === String(courseId),
+            );
+            if (match) {
+              setIsEnrolled(true);
+              setEnrollmentDetail(match);
+            }
+          })
+          .catch(() => {}),
+      ]).finally(() => setEnrollmentChecked(true));
     }
   };
 
@@ -227,6 +252,8 @@ function CourseScedule({
   const [scheduleOpen, setScheduleOpen] = useState(true);
   const [timeSlotOpen, setTimeSlotOpen] = useState(false);
   const [sessionOpen, setSessionOpen] = useState(false);
+  const [hoveredTimeSlotKey, setHoveredTimeSlotKey] = useState<string | null>(null);
+  const [hoveredSessionKey, setHoveredSessionKey] = useState<string | null>(null);
 
   // --- Fetch weekly schedules on mount ---
   useEffect(() => {
@@ -271,6 +298,14 @@ function CourseScedule({
       .catch(() => {});
   }, [courseId, selectedScheduleId, selectedTimeSlotId]);
 
+  useEffect(() => {
+    document.body.style.overflow =
+      showSuccessModal || showCompleteProfileModal ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showSuccessModal, showCompleteProfileModal]);
+
   // --- Handlers ---
   function handleTimeSlotClick(staticKey: string) {
     const match = matchTimeSlot(staticKey, timeSlots);
@@ -279,6 +314,7 @@ function CourseScedule({
       setSelectedTimeSlotKey(null);
       setSelectedTimeSlotId(null);
       setSelectedSessionKey(null);
+      setSessionOpen(false);
     } else {
       setSelectedTimeSlotKey(staticKey);
       setSelectedTimeSlotId(match.id);
@@ -311,7 +347,6 @@ function CourseScedule({
   const sessionMod = selectedSession
     ? parseFloat(selectedSession.priceModifier)
     : 0;
-  const basePrice = 349;
   const totalPrice = basePrice + sessionMod;
 
   const showTimeSlots = selectedScheduleId !== null && timeSlotOpen;
@@ -334,38 +369,61 @@ function CourseScedule({
   // --- Time slot div styles ---
   function timeSlotContainerStyle(staticKey: string) {
     const available = isTimeSlotAvailable(staticKey);
-    const selected = selectedTimeSlotKey === staticKey;
+    const active = selectedTimeSlotKey === staticKey || hoveredTimeSlotKey === staticKey;
 
     if (!available) {
-      return "p-[15px] rounded-[12px] bg-[#F5F5F5] border-[1px] h-[61px] border-[#D1D1D1] w-full flex items-center justify-center gap-[12px] cursor-default";
+      return "p-[15px] rounded-[12px] bg-[#F5F5F5] border-[1px] h-[61px] border-[#D1D1D1] w-full flex items-center justify-center gap-[12px] cursor-default transition-all duration-300 ease-out";
     }
-    if (selected) {
-      return "p-[15px] rounded-[12px] bg-white border-[2px] h-[61px] border-[#736BEA] w-full flex items-center justify-center gap-[12px] cursor-pointer";
+    if (active) {
+      return "p-[15px] rounded-[12px] bg-[#DDDBFA] border-[2px] h-[61px] border-[#958FEF] w-full flex items-center justify-center gap-[12px] cursor-pointer transition-all duration-300 ease-out";
     }
-    return "p-[15px] rounded-[12px] bg-white border-[1px] h-[61px] border-[#D1D1D1] w-full flex items-center justify-center gap-[12px] cursor-pointer";
+    return "p-[15px] rounded-[12px] bg-white border-[1px] h-[61px] border-[#D1D1D1] w-full flex items-center justify-center gap-[12px] cursor-pointer transition-all duration-300 ease-out";
   }
 
   function timeSlotTextColor(staticKey: string) {
-    const available = isTimeSlotAvailable(staticKey);
-    return available ? "#666666" : "#D1D1D1";
+    if (!isTimeSlotAvailable(staticKey)) return "#D1D1D1";
+    if (selectedTimeSlotKey === staticKey || hoveredTimeSlotKey === staticKey) return "#4F46E5";
+    return "#666666";
+  }
+
+  function getTimeSlotIconColor(staticKey: string): string | undefined {
+    if (!isTimeSlotAvailable(staticKey)) return undefined;
+    if (selectedTimeSlotKey === staticKey || hoveredTimeSlotKey === staticKey) return "#4F46E5";
+    return undefined;
+  }
+
+  function timeSlotIconOpacity(staticKey: string) {
+    return isTimeSlotAvailable(staticKey) ? 1 : 0.3;
+  }
+
+  function sessionIconOpacity(staticKey: string) {
+    return isSessionAvailable(staticKey) ? 1 : 0.3;
+  }
+
+  function getSessionIconColor(staticKey: string): string | undefined {
+    if (!isSessionAvailable(staticKey)) return undefined;
+    if (selectedSessionKey === staticKey || hoveredSessionKey === staticKey) return "#4F46E5";
+    return undefined;
   }
 
   // --- Session type card styles ---
   function sessionCardStyle(staticKey: string) {
     const available = isSessionAvailable(staticKey);
-    const selected = selectedSessionKey === staticKey;
+    const active = selectedSessionKey === staticKey || hoveredSessionKey === staticKey;
 
     if (!available) {
-      return "py-[15px] px-[20px] rounded-[12px] bg-[#F5F5F5] border-[1px] h-[131px] border-[#D1D1D1] w-full flex flex-col items-center justify-center cursor-default";
+      return "py-[15px] px-[20px] rounded-[12px] bg-[#F5F5F5] border-[1px] h-[131px] border-[#D1D1D1] w-full flex flex-col items-center justify-center cursor-default transition-all duration-300 ease-out";
     }
-    if (selected) {
-      return "py-[15px] px-[20px] rounded-[12px] bg-white border-[2px] h-[131px] border-[#736BEA] w-full flex flex-col items-center justify-center cursor-pointer";
+    if (active) {
+      return "py-[15px] px-[20px] rounded-[12px] bg-[#DDDBFA] border-[2px] h-[131px] border-[#958FEF] w-full flex flex-col items-center justify-center cursor-pointer transition-all duration-300 ease-out";
     }
-    return "py-[15px] px-[20px] rounded-[12px] bg-white border-[1px] h-[131px] border-[#D1D1D1] w-full flex flex-col items-center justify-center cursor-pointer";
+    return "py-[15px] px-[20px] rounded-[12px] bg-white border-[1px] h-[131px] border-[#D1D1D1] w-full flex flex-col items-center justify-center cursor-pointer transition-all duration-300 ease-out";
   }
 
   function sessionTextColor(staticKey: string) {
-    return isSessionAvailable(staticKey) ? "#525252" : "#D1D1D1";
+    if (!isSessionAvailable(staticKey)) return "#D1D1D1";
+    if (selectedSessionKey === staticKey || hoveredSessionKey === staticKey) return "#4F46E5";
+    return "#525252";
   }
 
   function sessionPriceColor(staticKey: string) {
@@ -461,7 +519,17 @@ function CourseScedule({
   if (!enrollmentChecked) return null;
 
   if (isEnrolled && enrollmentDetail) {
-    return <AlreadyEnrolledCard enrollment={enrollmentDetail} onUnenroll={() => { setIsEnrolled(false); setEnrollmentDetail(null); }} />;
+    return (
+      <AlreadyEnrolledCard
+        enrollment={enrollmentDetail}
+        isRated={isRated}
+        courseTitle={courseTitle}
+        onUnenroll={() => {
+          setIsEnrolled(false);
+          setEnrollmentDetail(null);
+        }}
+      />
+    );
   }
   return (
     <>
@@ -473,8 +541,8 @@ function CourseScedule({
             onClick={handleToggleSchedule}
           >
             <div className="flex items-center gap-[8px]">
-              <WeeklyScheduleIcon />
-              <p className="text-[#130E67] font-semibold text-[24px] leading-none tracking-normal">
+              <WeeklyScheduleIcon state={selectedScheduleKey ? "selected" : scheduleOpen ? "open" : "inactive"} />
+              <p className="font-semibold text-[24px] leading-none tracking-normal" style={{ color: selectedScheduleKey || scheduleOpen ? "#130E67" : "#8A8A8A" }}>
                 Weekly Schedule
               </p>
             </div>
@@ -499,16 +567,18 @@ function CourseScedule({
                     key={key}
                     className={
                       !available
-                        ? "text-[#D1D1D1] h-full font-semibold text-[16px] leading-none border-[1px] border-[#D1D1D1] rounded-[12px] flex items-center justify-center bg-[#F5F5F5] w-full cursor-default"
+                        ? "text-[#D1D1D1] h-full font-semibold text-[16px] leading-none border-[1px] border-[#D1D1D1] rounded-[12px] flex items-center justify-center bg-[#F5F5F5] w-full cursor-default transition-all duration-300 ease-out"
                         : selected
-                          ? "text-[#130E67] h-full font-semibold text-[16px] leading-none border-[2px] border-[#736BEA] rounded-[12px] flex items-center justify-center bg-white w-full cursor-pointer"
-                          : "text-[#292929] h-full font-semibold text-[16px] leading-none border-[1px] border-[#D1D1D1] rounded-[12px] flex items-center justify-center bg-white w-full cursor-pointer"
+                          ? "text-[#4F46E5] h-full font-semibold text-[16px] leading-none border-[2px] border-[#958FEF] rounded-[12px] flex items-center justify-center bg-[#DDDBFA] w-full cursor-pointer transition-all duration-300 ease-out"
+                          : "text-[#292929] h-full font-semibold text-[16px] leading-none border-[1px] border-[#D1D1D1] rounded-[12px] flex items-center justify-center bg-white w-full cursor-pointer hover:bg-[#DDDBFA] hover:text-[#4F46E5] hover:border-[#958FEF] transition-all duration-300 ease-out"
                     }
                     onClick={() => {
                       if (!available) return;
                       if (selectedScheduleKey === key) {
                         setSelectedScheduleKey(null);
                         setSelectedScheduleId(null);
+                        setTimeSlotOpen(false);
+                        setSessionOpen(false);
                       } else {
                         const match = matchSchedule(label, weeklySchedules);
                         setSelectedScheduleKey(key);
@@ -535,8 +605,8 @@ function CourseScedule({
             onClick={handleToggleTimeSlot}
           >
             <div className="flex items-center gap-[8px]">
-              <TimeSlotIcon />
-              <p className="text-[#8A8A8A] font-semibold text-[24px] leading-none tracking-normal">
+              <TimeSlotIcon state={selectedTimeSlotKey ? "selected" : timeSlotOpen ? "open" : "inactive"} />
+              <p className="font-semibold text-[24px] leading-none tracking-normal" style={{ color: selectedTimeSlotKey || timeSlotOpen ? "#130E67" : "#8A8A8A" }}>
                 Time Slot
               </p>
             </div>
@@ -556,8 +626,10 @@ function CourseScedule({
               <div
                 className={timeSlotContainerStyle("morning")}
                 onClick={() => handleTimeSlotClick("morning")}
+                onMouseEnter={() => isTimeSlotAvailable("morning") && setHoveredTimeSlotKey("morning")}
+                onMouseLeave={() => setHoveredTimeSlotKey(null)}
               >
-                <MorningIcon />
+                <span style={{ opacity: timeSlotIconOpacity("morning") }}><MorningIcon color={getTimeSlotIconColor("morning")} /></span>
                 <div className="flex flex-col h-[31px] justify-center gap-[2px]">
                   <p
                     className="h-[17px] flex items-center font-medium text-[14px] leading-none tracking-normal"
@@ -578,8 +650,10 @@ function CourseScedule({
               <div
                 className={timeSlotContainerStyle("afternoon")}
                 onClick={() => handleTimeSlotClick("afternoon")}
+                onMouseEnter={() => isTimeSlotAvailable("afternoon") && setHoveredTimeSlotKey("afternoon")}
+                onMouseLeave={() => setHoveredTimeSlotKey(null)}
               >
-                <AfternoonIcon />
+                <span style={{ opacity: timeSlotIconOpacity("afternoon") }}><AfternoonIcon color={getTimeSlotIconColor("afternoon")} /></span>
                 <div className="flex flex-col h-[31px] justify-center gap-[2px]">
                   <p
                     className="h-[17px] flex items-center font-medium text-[14px] leading-none tracking-normal"
@@ -600,8 +674,10 @@ function CourseScedule({
               <div
                 className={timeSlotContainerStyle("evening")}
                 onClick={() => handleTimeSlotClick("evening")}
+                onMouseEnter={() => isTimeSlotAvailable("evening") && setHoveredTimeSlotKey("evening")}
+                onMouseLeave={() => setHoveredTimeSlotKey(null)}
               >
-                <EveningIcon />
+                <span style={{ opacity: timeSlotIconOpacity("evening") }}><EveningIcon color={getTimeSlotIconColor("evening")} /></span>
                 <div className="flex flex-col h-[31px] gap-[2px]">
                   <p
                     className="h-[17px] flex items-center font-medium text-[14px] leading-none tracking-normal"
@@ -627,8 +703,8 @@ function CourseScedule({
             onClick={handleToggleSession}
           >
             <div className="flex items-center gap-[8px]">
-              <SessionIcon />
-              <p className="text-[#8A8A8A] font-semibold text-[24px] leading-none tracking-normal">
+              <SessionIcon state={selectedSessionKey ? "selected" : sessionOpen ? "open" : "inactive"} />
+              <p className="font-semibold text-[24px] leading-none tracking-normal" style={{ color: selectedSessionKey || sessionOpen ? "#130E67" : "#8A8A8A" }}>
                 Session Type
               </p>
             </div>
@@ -649,8 +725,10 @@ function CourseScedule({
                 <div
                   className={sessionCardStyle("online")}
                   onClick={() => handleSessionClick("online")}
+                  onMouseEnter={() => isSessionAvailable("online") && setHoveredSessionKey("online")}
+                  onMouseLeave={() => setHoveredSessionKey(null)}
                 >
-                  <OnlineIcon />
+                  <span style={{ opacity: sessionIconOpacity("online") }}><OnlineIcon color={getSessionIconColor("online")} /></span>
                   <p
                     className="font-semibold text-[16px] leading-none tracking-normal text-center h-[19px] flex items-center mt-[6px]"
                     style={{ color: sessionTextColor("online") }}
@@ -678,8 +756,10 @@ function CourseScedule({
                 <div
                   className={sessionCardStyle("in_person")}
                   onClick={() => handleSessionClick("in_person")}
+                  onMouseEnter={() => isSessionAvailable("in_person") && setHoveredSessionKey("in_person")}
+                  onMouseLeave={() => setHoveredSessionKey(null)}
                 >
-                  <InPersonIcon />
+                  <span style={{ opacity: sessionIconOpacity("in_person") }}><InPersonIcon color={getSessionIconColor("in_person")} /></span>
                   <p
                     className="font-semibold text-[16px] leading-none tracking-normal text-center h-[19px] flex items-center mt-[6px]"
                     style={{ color: sessionTextColor("in_person") }}
@@ -687,7 +767,7 @@ function CourseScedule({
                     In-Person
                   </p>
                   <div className="flex h-[15px] items-center mt-[6px] gap-[2px] overflow-hidden">
-                    <LocationIcon />
+                    <span style={{ opacity: sessionIconOpacity("in_person") }}><LocationIcon color={getSessionIconColor("in_person")} /></span>
                     <p
                       className="flex items-center font-normal text-[12px] leading-none tracking-normal truncate whitespace-nowrap"
                       style={{ color: sessionTextColor("in_person") }}
@@ -710,8 +790,10 @@ function CourseScedule({
                 <div
                   className={sessionCardStyle("hybrid")}
                   onClick={() => handleSessionClick("hybrid")}
+                  onMouseEnter={() => isSessionAvailable("hybrid") && setHoveredSessionKey("hybrid")}
+                  onMouseLeave={() => setHoveredSessionKey(null)}
                 >
-                  <HybridIcon />
+                  <span style={{ opacity: sessionIconOpacity("hybrid") }}><HybridIcon color={getSessionIconColor("hybrid")} /></span>
                   <p
                     className="font-semibold text-[16px] leading-none tracking-normal text-center h-[19px] flex items-center mt-[6px]"
                     style={{ color: sessionTextColor("hybrid") }}
@@ -719,7 +801,7 @@ function CourseScedule({
                     Hybrid
                   </p>
                   <div className="flex h-[15px] items-center mt-[6px] gap-[2px] overflow-hidden">
-                    <LocationIcon />
+                    <span style={{ opacity: sessionIconOpacity("hybrid") }}><LocationIcon color={getSessionIconColor("hybrid")} /></span>
                     <p
                       className="flex items-center font-normal text-[12px] leading-none tracking-normal truncate whitespace-nowrap"
                       style={{ color: sessionTextColor("hybrid") }}
@@ -774,12 +856,24 @@ function CourseScedule({
               selectedSessionKey &&
               isSessionAvailable(selectedSessionKey) &&
               !enrolling
-                ? { backgroundColor: "#736BEA", color: "#ffffff", cursor: "pointer" }
-                : { backgroundColor: "#EEEDFC", color: "#B7B3F4", cursor: "default" }
+                ? {
+                    backgroundColor: "#736BEA",
+                    color: "#ffffff",
+                    cursor: "pointer",
+                  }
+                : {
+                    backgroundColor: "#EEEDFC",
+                    color: "#B7B3F4",
+                    cursor: "default",
+                  }
             }
-            disabled={!selectedSessionKey || !isSessionAvailable(selectedSessionKey || "") || enrolling}
+            disabled={
+              !selectedSessionKey ||
+              !isSessionAvailable(selectedSessionKey || "") ||
+              enrolling
+            }
             onClick={() => {
-              if (isLoggedIn && !profileComplete) {
+              if (isLoggedIn && profileChecked && !profileComplete) {
                 setShowCompleteProfileModal(true);
                 return;
               }
@@ -798,7 +892,7 @@ function CourseScedule({
             onButtonClick={onSignInClick}
           />
         )}
-        {isLoggedIn && !profileComplete && (
+        {isLoggedIn && profileChecked && !profileComplete && (
           <AuthWarningBanner
             title="Complete Your Profile"
             description="You need to fill in your profile details before enrolling in this course."
@@ -825,24 +919,21 @@ function CourseScedule({
           onClick={handleSuccessDone}
         >
           <div
-            className="bg-white w-[460px] rounded-[16px] p-[50px] flex flex-col items-center"
+            className="bg-white w-[476px] rounded-[16px] p-[60px] flex flex-col items-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-[72px] h-[72px] rounded-full bg-[#EEEDFC] flex items-center justify-center">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 6L9 17L4 12" stroke="#4F46E5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <p className="text-[#141414] font-semibold text-[32px] leading-[100%] tracking-[0%] text-center mt-[24px]">
-              Enrollment Successful
+            <ConfirmedEnrollmentIcon />
+            <p className="font-semibold h-[39px] flex items-center text-3xl leading-none tracking-normal text-center text-[#3D3D3D] mt-[24px]">
+              Enrollment Confirmed!
             </p>
-            <p className="text-[#666666] mt-[12px] font-medium text-[14px] leading-[100%] tracking-[0%] text-center">
-              You have been successfully enrolled in this course.
+            <p className=" font-medium text-xl leading-none tracking-normal mt-[24px] text-center text-[#3D3D3D]">
+              You've successfully enrolled to the{" "}
+              <span className="font-semibold">"{courseTitle}"</span> Course!
             </p>
             <button
               type="button"
               onClick={handleSuccessDone}
-              className="w-full h-[47px] mt-[32px] rounded-[10px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out text-white font-medium text-[16px] leading-[24px] cursor-pointer"
+              className="w-full h-[58px] mt-[40px] rounded-[10px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out text-white text-[16px] cursor-pointer font-medium text-base leading-6 tracking-normal text-center"
             >
               Done
             </button>
@@ -856,32 +947,34 @@ function CourseScedule({
           onClick={() => setShowCompleteProfileModal(false)}
         >
           <div
-            className="bg-white w-[460px] rounded-[16px] p-[50px] flex flex-col items-center"
+            className="bg-white w-[476px] rounded-[16px] p-[60px] flex flex-col items-center text-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-[#141414] font-semibold text-[32px] leading-[100%] tracking-[0%] text-center">
-              Complete Your Profile
+            <CompleteProfIcon />
+            <p className="text-[#3D3D3D] mt-[24px] h-[78px] flex items-center font-semibold text-3xl leading-none tracking-normal">
+              Complete your profile <br /> to continue
             </p>
-            <p className="text-[#666666] mt-[12px] font-medium text-[14px] leading-[100%] tracking-[0%] text-center">
-              You need to fill in your profile details before enrolling in this course.
+            <p className="mt-[24px]  font-medium text-xl leading-none h-[48px] flex items-center tracking-normal text-[#3D3D3D]">
+              You need to complete your profile before enrolling in this course.
             </p>
-            <div className="flex gap-[8px] w-full mt-[32px]">
-              <button
-                type="button"
-                onClick={() => setShowCompleteProfileModal(false)}
-                className="flex-1 h-[47px] rounded-[10px] border-[2px] border-[#958FEF] text-[#4F46E5] font-medium text-[16px] leading-[24px] cursor-pointer hover:bg-[#EEEDFC] active:bg-[#DDDBFA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#958FEF] transition-colors duration-300 ease-out"
-              >
-                Cancel
-              </button>
+
+            <div className="flex gap-[8px] w-full mt-[40px]">
               <button
                 type="button"
                 onClick={() => {
                   setShowCompleteProfileModal(false);
                   onCompleteProfileClick();
                 }}
-                className="flex-1 h-[47px] rounded-[10px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out text-white font-medium text-[16px] leading-[24px] cursor-pointer"
+                className="flex-1 h-[58px] rounded-[8px] border-[2px] border-[#958FEF] cursor-pointer flex items-center justify-center font-medium text-base leading-6 tracking-normal text-center text-[#4F46E5]"
               >
                 Complete Profile
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCompleteProfileModal(false)}
+                className="flex-1 h-[58px] rounded-[8px]  bg-[#4F46E5]   font-medium text-base leading-6 tracking-normal text-center text-white cursor-pointer"
+              >
+                Cancel
               </button>
             </div>
           </div>

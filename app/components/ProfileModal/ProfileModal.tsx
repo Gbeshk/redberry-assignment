@@ -232,7 +232,7 @@ export default function ProfileModal({
               </div>
             </div>
             {fullNameError && (
-              <p className="mt-[4px] text-[12px] font-normal leading-none tracking-normal text-[#F4161A] truncate">
+              <p className="mt-[4px] text-[12px] font-normal leading-[100%] tracking-[0%] text-[#F4161A] truncate">
                 {fullNameError}
               </p>
             )}
@@ -273,7 +273,7 @@ export default function ProfileModal({
                 </div>
               </div>
               {mobileError && (
-                <p className="mt-[4px] text-[12px] font-normal leading-none tracking-normal text-[#F4161A] truncate">
+                <p className="mt-[4px] text-[12px] font-normal leading-[100%] tracking-[0%] text-[#F4161A] truncate">
                   {mobileError}
                 </p>
               )}
@@ -311,7 +311,7 @@ export default function ProfileModal({
                 </div>
               </div>
               {ageError && (
-                <p className="mt-[4px] text-[12px] font-normal leading-none tracking-normal text-[#F4161A] truncate">
+                <p className="mt-[4px] text-[12px] font-normal leading-[100%] tracking-[0%] text-[#F4161A] truncate">
                   {ageError}
                 </p>
               )}

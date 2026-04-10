@@ -21,7 +21,7 @@ const MODAL_MIN_HEIGHTS: Record<number, string> = {
   3: "622px",
 };
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
 
 const inputClass = (hasError: boolean) =>
   `w-full mt-[8px] h-[48px] rounded-[8px] pl-[13px] pr-[15px] py-[12px] 
@@ -43,7 +43,7 @@ const iconColor = (hasError: boolean) => (hasError ? "#F4161A" : "#ADADAD");
 
 function ErrorMessage({ msg }: { msg: string }) {
   return (
-    <p className="error-message mt-[4px] text-[12px] font-normal leading-none tracking-normal h-[17px] flex items-center text-[#F4161A]">
+    <p className="error-message mt-[4px] text-[12px] font-normal leading-[100%] tracking-[0%] h-[17px] flex items-center text-[#F4161A]">
       {msg}
     </p>
   );
@@ -122,6 +122,7 @@ export default function SignUpModal({
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [isConfirmPasswordFocused, setIsConfirmPasswordFocused] =
     useState(false);
@@ -147,6 +148,7 @@ export default function SignUpModal({
     setAvatarPreview(null);
     setAvatarError("");
     setIsSubmitting(false);
+    setSubmitError("");
     onClose();
   };
 
@@ -175,7 +177,9 @@ export default function SignUpModal({
         "The username field must be at least 3 characters.",
       );
     setUsernameError("");
+    if (avatarError) return;
     setIsSubmitting(true);
+    setSubmitError("");
 
     try {
       const formData = new FormData();
@@ -211,6 +215,10 @@ export default function SignUpModal({
           }
           if (data.errors.username?.[0])
             setUsernameError(data.errors.username[0]);
+          if (!data.errors.email && !data.errors.username)
+            setSubmitError("Please check your details and try again.");
+        } else {
+          setSubmitError("Something went wrong. Please try again.");
         }
       } else {
         const token = data?.data?.token;
@@ -221,8 +229,8 @@ export default function SignUpModal({
         handleClose();
         onSuccess?.();
       }
-    } catch (error) {
-      console.error("Registration error:", error);
+    } catch {
+      setSubmitError("Something went wrong. Please check your connection and try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -458,9 +466,11 @@ export default function SignUpModal({
                   style={{
                     width: "360px",
                     height: "140px",
-                    border: hasAvatar
-                      ? "1.5px solid #DDDBFA"
-                      : "1.5px solid #D1D1D1",
+                    border: avatarError
+                      ? "1.5px solid #F4161A"
+                      : hasAvatar
+                        ? "1.5px solid #DDDBFA"
+                        : "1.5px solid #D1D1D1",
                     backgroundColor: hasAvatar ? "#EEEDFC" : "transparent",
                   }}
                   onClick={() =>
@@ -485,15 +495,30 @@ export default function SignUpModal({
                         <p className="text-[#ADADAD] font-normal text-[10px] leading-none tracking-normal h-[12px] flex items-center">
                           Size — {formatFileSize(avatar!.size)}
                         </p>
-                        <p
-                          className="h-[12px] flex items-center mt-[2px] text-[#4F46E5] font-medium text-[10px] leading-none tracking-normal underline decoration-solid underline-offset-[25%] decoration-[0px]"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            document.getElementById("avatarInput")?.click();
-                          }}
-                        >
-                          Change
-                        </p>
+                        <div className="flex items-center gap-[8px] mt-[2px]">
+                          <p
+                            className="h-[12px] flex items-center text-[#4F46E5] font-medium text-[10px] leading-none tracking-normal underline decoration-solid underline-offset-[25%] decoration-[0px]"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              document.getElementById("avatarInput")?.click();
+                            }}
+                          >
+                            Change
+                          </p>
+                          <p
+                            className="h-[12px] flex items-center text-[#F4161A] font-medium text-[10px] leading-none tracking-normal underline decoration-solid underline-offset-[25%] decoration-[0px]"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setAvatar(null);
+                              setAvatarPreview(null);
+                              setAvatarError("");
+                              const input = document.getElementById("avatarInput") as HTMLInputElement;
+                              if (input) input.value = "";
+                            }}
+                          >
+                            Remove
+                          </p>
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -513,26 +538,25 @@ export default function SignUpModal({
                   <input
                     type="file"
                     id="avatarInput"
-                    accept=".jpg,.jpeg,.png,.webp"
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
                       const allowed = ["image/jpeg", "image/png", "image/webp"];
-                      if (!allowed.includes(file.type)) {
-                        setAvatarError("Only JPG, PNG, or WebP files are allowed.");
-                        e.target.value = "";
-                        return;
-                      }
-                      setAvatarError("");
                       setAvatar(file);
                       setAvatarPreview(URL.createObjectURL(file));
+                      if (!allowed.includes(file.type)) {
+                        setAvatarError("Only JPG, PNG, or WebP files are allowed.");
+                      } else {
+                        setAvatarError("");
+                      }
                     }}
                   />
                 </div>
                 {avatarError && <ErrorMessage msg={avatarError} />}
               </div>
 
+              {submitError && <ErrorMessage msg={submitError} />}
               <button
                 type="button"
                 className="w-[360px] h-[47px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white mt-[18px] cursor-pointer"

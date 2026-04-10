@@ -1,7 +1,15 @@
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import Logo from "../../../public/images/logo.svg";
 import SocialMedia from "../../../public/images/Social Media.svg";
-function Footer() {
+
+interface FooterProps {
+  onEnrolledCoursesClick: () => void;
+  onMyProfileClick: () => void;
+}
+
+function Footer({ onEnrolledCoursesClick, onMyProfileClick }: FooterProps) {
+  const router = useRouter();
   return (
     <div className="w-full h-[334px] border-t-[1px] border-t-[#D1D1D1] mt-[162px]">
       <div className="mt-[80px] flex w-[1566px] mx-auto justify-between">
@@ -36,10 +44,16 @@ function Footer() {
             <p className="text-[#130E67] font-semibold text-[20px] leading-[24px] tracking-normal">
               Explore
             </p>
-            <p className="text-[#666666] font-normal mt-[16px] text-[18px] leading-none tracking-normal">
+            <p
+              onClick={onEnrolledCoursesClick}
+              className="text-[#666666] cursor-pointer font-normal mt-[16px] text-[18px] leading-none tracking-normal hover:text-[#4F46E5] transition-colors duration-200"
+            >
               Enrolled Courses
             </p>
-            <p className="text-[#666666] font-normal mt-[8px] text-[18px] leading-none tracking-normal">
+            <p
+              onClick={() => router.push("/courses")}
+              className="text-[#666666] cursor-pointer font-normal mt-[8px] text-[18px] leading-none tracking-normal hover:text-[#4F46E5] transition-colors duration-200"
+            >
               Browse Courses
             </p>
           </div>
@@ -47,7 +61,10 @@ function Footer() {
             <p className="text-[#130E67] font-semibold text-[20px] leading-[24px] tracking-normal">
               Account
             </p>
-            <p className="text-[#666666] font-normal mt-[16px] text-[18px] leading-none tracking-normal">
+            <p
+              onClick={onMyProfileClick}
+              className="text-[#666666] cursor-pointer font-normal mt-[16px] text-[18px] leading-none tracking-normal hover:text-[#4F46E5] transition-colors duration-200"
+            >
               My Profile
             </p>
           </div>

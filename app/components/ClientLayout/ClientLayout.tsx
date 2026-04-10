@@ -112,7 +112,16 @@ export default function ClientLayout({
         onClose={() => setShowEnrolledDrawer(false)}
       />
       <main className="flex-1">{children}</main>
-      <Footer />
+      <Footer
+        onEnrolledCoursesClick={() => {
+          if (isLoggedIn) setShowEnrolledDrawer(true);
+          else setShowSignInModal(true);
+        }}
+        onMyProfileClick={() => {
+          if (isLoggedIn) setShowProfileModal(true);
+          else setShowSignInModal(true);
+        }}
+      />
     </>
   );
 }

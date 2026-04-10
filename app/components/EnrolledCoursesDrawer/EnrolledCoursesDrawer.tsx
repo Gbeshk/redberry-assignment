@@ -62,16 +62,26 @@ export default function EnrolledCoursesDrawer({ isOpen, onClose }: Props) {
       },
     })
       .then((r) => r.json())
-      .then((json) => setEnrollments(json.data ?? []))
+      .then((json) => {
+        const sorted = (json.data ?? []).sort(
+          (a: Enrollment, b: Enrollment) => b.progress - a.progress,
+        );
+        setEnrollments(sorted);
+      })
       .catch(() => setError("Failed to load enrollments."))
       .finally(() => setLoading(false));
     console.log(enrollments);
   }, [isOpen]);
 
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [isOpen]);
+
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} />
+        <div className="fixed inset-0 z-40" style={{ backgroundColor: "#00000040" }} onClick={onClose} />
       )}
 
       <div
@@ -146,12 +156,14 @@ export default function EnrolledCoursesDrawer({ isOpen, onClose }: Props) {
                           {enrollment.course.instructor.name}
                         </span>
                       </p>
-                      <div className="flex gap-[4px] items-center">
-                        <StarIcon />
-                        <p className="font-medium text-sm leading-none tracking-normal text-[#525252]">
-                          {enrollment.course.avgRating}
-                        </p>
-                      </div>
+                      {enrollment.course.avgRating ? (
+                        <div className="flex gap-[4px] items-center">
+                          <StarIcon />
+                          <p className="font-medium text-sm leading-none tracking-normal text-[#525252]">
+                            {Math.round(enrollment.course.avgRating * 10) / 10}
+                          </p>
+                        </div>
+                      ) : null}
                     </div>
                     <p className="font-semibold text-[20px] leading-[24px] tracking-normal text-[#141414] w-[257px] mt-[8px] h-[48px] flex items-center">
                       {enrollment.course.title}

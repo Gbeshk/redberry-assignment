@@ -8,7 +8,7 @@ interface SignInModalProps {
   onSuccess?: () => void | Promise<void>;
 }
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
 
 const inputClass = (hasError: boolean) =>
   `w-full mt-[8px] h-[48px] rounded-[8px] pl-[13px] pr-[15px] py-[12px]
@@ -34,7 +34,7 @@ const iconColor = (hasError: boolean, isFocused = false) => {
 
 function ErrorMessage({ msg }: { msg: string }) {
   return (
-    <p className="error-message mt-[4px] text-[12px] font-normal leading-none tracking-normal h-[17px] flex items-center text-[#F4161A]">
+    <p className="error-message mt-[4px] text-[12px] font-normal leading-[100%] tracking-[0%] h-[17px] flex items-center text-[#F4161A]">
       {msg}
     </p>
   );
@@ -82,6 +82,9 @@ export default function SignInModal({
 
     if (!password.trim()) {
       setPasswordError("Password is required.");
+      hasError = true;
+    } else if (password.length < 3) {
+      setPasswordError("Password must be at least 3 characters.");
       hasError = true;
     } else {
       setPasswordError("");

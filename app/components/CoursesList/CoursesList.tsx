@@ -219,7 +219,9 @@ function CoursesList({
               </div>
               <div className="flex items-center gap-[6px]">
                 <StarIcon />
-                <p>{course.avgRating}</p>
+                <p className="font-medium text-sm leading-none tracking-normal text-[#525252]">
+                  {course.avgRating}
+                </p>
               </div>
             </div>
             <h1 className="text-[#141414] mt-[12px] font-semibold text-[24px] leading-none h-[58px] flex items-center tracking-normal">

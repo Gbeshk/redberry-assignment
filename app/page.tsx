@@ -62,6 +62,10 @@ export default function Home() {
           setShowSignUpModal(false);
           setShowSignInModal(true);
         }}
+        onSignInClick={() => {
+          setShowSignUpModal(false);
+          setShowSignInModal(true);
+        }}
       />
       <SignInModal
         isOpen={showSignInModal}

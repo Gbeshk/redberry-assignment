@@ -43,6 +43,8 @@ export interface Course {
   isFeatured: boolean;
   avgRating: number;
   reviewCount: number;
+  isRated: boolean;
+  reviews?: { userId: number; rating: number }[];
   category: Category;
   topic: Topic;
   instructor: Instructor;
@@ -64,13 +66,22 @@ export default function CourseDetailPage() {
   const [signInModalOpen, setSignInModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   useEffect(() => {
-    fetch(`https://api.redclass.redberryinternship.ge/api/courses/${id}`)
+    const token = localStorage.getItem("authToken");
+    const headers: HeadersInit = { Accept: "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`https://api.redclass.redberryinternship.ge/api/courses/${id}`, { headers })
       .then((res) => res.json())
       .then((data) => {
         const courseData = Array.isArray(data.data) ? data.data[0] : data.data;
-
+        if (courseData && Array.isArray(courseData.reviews) && courseData.reviews.length > 0) {
+          const sum = courseData.reviews.reduce((acc: number, r: { rating: number }) => acc + r.rating, 0);
+          courseData.avgRating = sum / courseData.reviews.length;
+          courseData.reviewCount = courseData.reviews.length;
+        } else if (courseData) {
+          courseData.avgRating = 0;
+          courseData.reviewCount = 0;
+        }
         setCourse(courseData);
-        console.log(courseData);
       });
   }, [id]);
 
@@ -126,7 +137,7 @@ export default function CourseDetailPage() {
               <BigStarIcon />
 
               <p className="ml-[4px] text-[#525252] font-medium text-[14px] leading-[150%] tracking-normal">
-                {course.avgRating}
+                {course.avgRating ? Number(course.avgRating).toFixed(1) : "0.0"}
               </p>
               <div className="py-[8px] h-[39px] bg-white ml-[16px] rounded-[12px] flex items-center gap-[8px] px-[12px]">
                 <span className="text-[#525252]">
@@ -169,6 +180,9 @@ export default function CourseDetailPage() {
         </div>
         <CourseScedule
           courseId={id as string}
+          courseTitle={course.title}
+          isRated={course.isRated}
+          basePrice={Number(course.basePrice)}
           onSignInClick={() => setSignInModalOpen(true)}
           onCompleteProfileClick={() => setProfileModalOpen(true)}
         />
