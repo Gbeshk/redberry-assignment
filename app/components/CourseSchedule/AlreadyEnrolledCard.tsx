@@ -1,25 +1,27 @@
 "use client";
 import { useState, useEffect } from "react";
-import Calendar from "../icons/Calendar";
-import Location from "../icons/Location";
-import Online from "../icons/Online";
-import Hybrid from "../icons/Hybrid";
-import InPerson from "../icons/InPerson";
-import SmallTimeIcon from "../icons/SmallTimeIcon";
-import CongratulateIcon from "../icons/CongratulateIcon";
+import Calendar from "@/app/components/icons/Calendar";
+import Location from "@/app/components/icons/Location";
+import Online from "@/app/components/icons/Online";
+import Hybrid from "@/app/components/icons/Hybrid";
+import InPerson from "@/app/components/icons/InPerson";
+import SmallTimeIcon from "@/app/components/icons/SmallTimeIcon";
+import EnrollmentInfoRow from "./EnrollmentInfoRow";
+import ProgressBar from "./ProgressBar";
+import StarRating from "./StarRating";
+import CongratsModal from "./CongratsModal";
+import { EnrollmentDetail } from "@/app/types/enrollment";
 
-interface EnrollmentDetail {
-  id: number;
-  progress: number;
-  isRated?: boolean;
-  course?: { id: number };
-  schedule?: {
-    weeklySchedule?: { label: string };
-    timeSlot?: { label: string; startTime?: string; endTime?: string };
-    sessionType?: { name: string; location?: string };
-    location?: string;
-  };
-}
+const SESSION_ICONS: Record<string, React.ReactNode> = {
+  online: <Online />,
+  in_person: <InPerson />,
+  hybrid: <Hybrid />,
+};
+
+const formatSessionName = (name: string) =>
+  name === "in_person"
+    ? "In Person"
+    : name.charAt(0).toUpperCase() + name.slice(1);
 
 export default function AlreadyEnrolledCard({
   enrollment,
@@ -34,12 +36,6 @@ export default function AlreadyEnrolledCard({
 }) {
   const [isCompleted, setIsCompleted] = useState(enrollment.progress >= 100);
   const [showCongrats, setShowCongrats] = useState(false);
-  useEffect(() => {
-    document.body.style.overflow = showCongrats ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [showCongrats]);
   const [completing, setCompleting] = useState(false);
   const [retaking, setRetaking] = useState(false);
   const [rating, setRating] = useState<number | null>(null);
@@ -47,15 +43,25 @@ export default function AlreadyEnrolledCard({
   const [isRating, setIsRating] = useState(false);
   const [ratingSubmitted, setRatingSubmitted] = useState(isRated);
 
+  useEffect(() => {
+    document.body.style.overflow = showCongrats ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showCongrats]);
+
   const schedule = enrollment.schedule;
   const days = schedule?.weeklySchedule?.label ?? "—";
-  const slot = schedule?.timeSlot;
-  const timeDisplay = slot?.label ?? "—";
+  const timeDisplay = schedule?.timeSlot?.label ?? "—";
   const sessionName = schedule?.sessionType?.name ?? "—";
   const isOnline = sessionName.toLowerCase() === "online";
   const location =
     schedule?.location ?? schedule?.sessionType?.location ?? null;
   const progress = isCompleted ? 100 : (enrollment.progress ?? 0);
+
+  const handleRate = (star: number) => {
+    if (!ratingSubmitted) setRating(star);
+  };
 
   const handleRetake = async () => {
     setRetaking(true);
@@ -76,39 +82,6 @@ export default function AlreadyEnrolledCard({
     } finally {
       setRetaking(false);
     }
-  };
-
-  const handleRate = (star: number) => {
-    if (ratingSubmitted) return;
-    setRating(star);
-  };
-
-  const handleDone = async () => {
-    if (rating !== null && !ratingSubmitted) {
-      setIsRating(true);
-      try {
-        const token = localStorage.getItem("authToken");
-        const res = await fetch(
-          `https://api.redclass.redberryinternship.ge/api/courses/${enrollment.course?.id}/reviews`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-            },
-            body: JSON.stringify({ rating }),
-          },
-        );
-        if (res.ok || res.status === 409) {
-          setRatingSubmitted(true);
-        }
-      } catch {
-      } finally {
-        setIsRating(false);
-      }
-    }
-    setShowCongrats(false);
   };
 
   const handleComplete = async () => {
@@ -135,6 +108,32 @@ export default function AlreadyEnrolledCard({
     }
   };
 
+  const handleDone = async () => {
+    if (rating !== null && !ratingSubmitted) {
+      setIsRating(true);
+      try {
+        const token = localStorage.getItem("authToken");
+        const res = await fetch(
+          `https://api.redclass.redberryinternship.ge/api/courses/${enrollment.course?.id}/reviews`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+            body: JSON.stringify({ rating }),
+          },
+        );
+        if (res.ok || res.status === 409) setRatingSubmitted(true);
+      } catch {
+      } finally {
+        setIsRating(false);
+      }
+    }
+    setShowCongrats(false);
+  };
+
   return (
     <div className="w-[530px]">
       <div
@@ -147,103 +146,33 @@ export default function AlreadyEnrolledCard({
         {isCompleted ? "Completed" : "Enrolled"}
       </div>
 
-      <div>
-        <span className="text-[4F46E5] flex items-center h-[24px] gap-[12px] mt-[22px]">
-          <Calendar />
-          <p className="text-[#525252] font-medium text-xl leading-none tracking-normal">
-            {days}
-          </p>
-        </span>
-      </div>
-
-      <div>
-        <span className="text-[4F46E5] flex items-center h-[24px] gap-[12px] mt-[22px]">
-          <SmallTimeIcon />{" "}
-          <p className="text-[#525252] font-medium text-xl leading-none tracking-normal">
-            {timeDisplay}
-          </p>
-        </span>
-      </div>
-
-      <div>
-        <span className="text-[4F46E5] flex items-center h-[24px] gap-[12px] mt-[22px]">
-          {sessionName === "online" && <Online />}
-          {sessionName === "in_person" && <InPerson />}
-          {sessionName === "hybrid" && <Hybrid />}
-          <p className="text-[#525252] font-medium text-xl leading-none tracking-normal">
-            {sessionName === "in_person"
-              ? "In Person"
-              : sessionName.charAt(0).toUpperCase() + sessionName.slice(1)}
-          </p>
-        </span>
-      </div>
-
+      <EnrollmentInfoRow icon={<Calendar />} label={days} />
+      <EnrollmentInfoRow icon={<SmallTimeIcon />} label={timeDisplay} />
+      <EnrollmentInfoRow
+        icon={SESSION_ICONS[sessionName] ?? null}
+        label={formatSessionName(sessionName)}
+      />
       {!isOnline && location && (
-        <div>
-          <span className="text-[4F46E5] flex items-center h-[24px] gap-[12px] mt-[22px]">
-            <Location />
-            <p className="text-[#525252] font-medium text-xl leading-none tracking-normal">
-              {location}
-            </p>
-          </span>
-        </div>
+        <EnrollmentInfoRow icon={<Location />} label={location} />
       )}
 
-      <p className="mt-[48px] h-[30px] flex items-center font-semibold text-xl leading-6 tracking-normal align-middle text-[#666666]">
-        {progress}% Complete
-      </p>
-      <div className="w-[473px] h-[23.45px] bg-[#DDDBFA] rounded-[30px]">
-        <div
-          className="h-full bg-[#4F46E5] rounded-[30px] mt-[12px] transition-all duration-500"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+      <ProgressBar progress={progress} />
 
       {isCompleted && (
         <div className="mt-[32px]">
-          {ratingSubmitted ? (
-            <p className="text-[#736BEA] font-medium text-[16px] leading-none tracking-normal">
-              You've already rated this course
+          {!ratingSubmitted && (
+            <p className="text-[#666666] font-medium text-[16px] leading-none tracking-normal mb-[12px]">
+              Rate this course
             </p>
-          ) : (
-            <>
-              <p className="text-[#666666] font-medium text-[16px] leading-none tracking-normal mb-[12px]">
-                Rate this course
-              </p>
-              <div className="flex gap-[8px]">
-                {[1, 2, 3, 4, 5].map((star) => {
-                  const filled = star <= (hoverRating ?? 0);
-                  return (
-                    <button
-                      key={star}
-                      type="button"
-                      className="transition-transform duration-150 cursor-pointer hover:scale-110 focus-visible:outline-none focus-visible:scale-110"
-                      onClick={() => handleRate(star)}
-                      onMouseEnter={() => setHoverRating(star)}
-                      onMouseLeave={() => setHoverRating(null)}
-                    >
-                      <svg
-                        width="32"
-                        height="32"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
-                          fill={filled ? "#F4A316" : "#D1D1D1"}
-                          stroke={filled ? "#F4A316" : "#D1D1D1"}
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  );
-                })}
-              </div>
-            </>
           )}
+          <StarRating
+            rating={rating}
+            hoverRating={hoverRating}
+            ratingSubmitted={ratingSubmitted}
+            size="sm"
+            onRate={handleRate}
+            onHover={setHoverRating}
+          />
         </div>
       )}
 
@@ -290,158 +219,19 @@ export default function AlreadyEnrolledCard({
           </svg>
         </button>
       )}
+
       {showCongrats && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{ backgroundColor: "#00000040" }}
-          onClick={() => setShowCongrats(false)}
-        >
-          <div
-            className="bg-white w-[460px] rounded-[16px] p-[50px] flex flex-col items-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <CongratulateIcon />
-            <p className=" font-semibold text-3xl leading-none tracking-normal h-[39px] flex items-center text-center text-[#3D3D3D] mt-[24px]">
-              Congratulations!
-            </p>
-            <p className=" font-medium text-xl leading-none tracking-normal text-center text-[#3D3D3D] mt-[24px]">
-              {"You've completed "}
-              <span className="font-semibold">{`"${courseTitle}"`}</span>
-              {" Course!"}
-            </p>
-            {ratingSubmitted ? (
-              <p className="mt-[40px] font-medium text-[16px] leading-[24px] tracking-[0] text-center text-[#736BEA]">
-                You've already rated this course
-              </p>
-            ) : (
-              <>
-                <p className="mt-[40px] font-medium text-[16px] leading-[24px] tracking-[0] text-center text-[#736BEA]">
-                  Rate your experience
-                </p>
-                <div className="flex gap-[8px] mt-[16px]">
-                  {[1, 2, 3, 4, 5].map((star) => {
-                    const activeRating = hoverRating ?? rating;
-                    const full =
-                      activeRating !== null ? star <= activeRating : star <= 2;
-                    const half = activeRating === null && star === 3;
-                    return (
-                      <button
-                        key={star}
-                        type="button"
-                        className="transition-transform duration-150 cursor-pointer hover:scale-110 focus-visible:outline-none"
-                        onClick={() => handleRate(star)}
-                        onMouseEnter={() =>
-                          !ratingSubmitted && setHoverRating(star)
-                        }
-                        onMouseLeave={() =>
-                          !ratingSubmitted && setHoverRating(null)
-                        }
-                      >
-                        {full ? (
-                          <svg
-                            width="46"
-                            height="46"
-                            viewBox="0 0 46 46"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M29.8807 14.6595C30.0224 14.9614 30.3053 15.1728 30.6349 15.2231L44.0762 17.2764C44.8808 17.3993 45.2093 18.3807 44.6409 18.9633L34.8524 28.9962C34.6308 29.2233 34.5302 29.5422 34.5813 29.8555L36.8833 43.9676C37.0177 44.7914 36.1431 45.4076 35.4126 45.0037L23.4838 38.41C23.1827 38.2436 22.8173 38.2436 22.5162 38.41L10.5874 45.0037C9.85685 45.4076 8.9823 44.7914 9.1167 43.9676L11.4187 29.8555C11.4698 29.5422 11.3692 29.2233 11.1476 28.9962L1.35906 18.9633C0.790657 18.3807 1.11922 17.3993 1.92382 17.2764L15.3651 15.2231C15.6947 15.1728 15.9776 14.9614 16.1193 14.6595L22.0948 1.92862C22.4547 1.16181 23.5453 1.16181 23.9052 1.92862L29.8807 14.6595Z"
-                              fill="#F4A316"
-                            />
-                          </svg>
-                        ) : half ? (
-                          <svg
-                            width="46"
-                            height="46"
-                            viewBox="0 0 46 46"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M22.0947 1.92862C22.4546 1.16182 23.5453 1.16181 23.9052 1.92862L29.8806 14.6592C30.0223 14.9611 30.3052 15.1725 30.6348 15.2229L44.0762 17.2765C44.8808 17.3994 45.2093 18.3808 44.6409 18.9634L34.8524 28.9958C34.6308 29.223 34.5301 29.5419 34.5812 29.8552L36.8832 43.9675C37.0176 44.7914 36.143 45.4076 35.4125 45.0037L23.4838 38.4097C23.1827 38.2433 22.8172 38.2433 22.5162 38.4097L10.5875 45.0037C9.85689 45.4076 8.98233 44.7914 9.11671 43.9675L11.4187 29.8552C11.4698 29.5419 11.3692 29.223 11.1475 28.9958L1.35904 18.9634C0.79063 18.3808 1.11917 17.3994 1.92376 17.2765L15.3651 15.2229C15.6947 15.1725 15.9776 14.9611 16.1193 14.6592L22.0947 1.92862Z"
-                              fill="#F4A316"
-                              fillOpacity="0.4"
-                            />
-                            <mask
-                              id="path-2-outside-1_8515_276"
-                              maskUnits="userSpaceOnUse"
-                              x="0.073761"
-                              y="0.111328"
-                              width="46"
-                              height="46"
-                              fill="black"
-                            >
-                              <rect
-                                fill="white"
-                                x="0.073761"
-                                y="0.111328"
-                                width="46"
-                                height="46"
-                              />
-                              <path d="M22.0948 1.68643C22.4547 0.919628 23.5453 0.919627 23.9052 1.68643L29.8807 14.417C30.0224 14.7189 30.3052 14.9303 30.6349 14.9807L44.0762 17.0343C44.8808 17.1573 45.2093 18.1386 44.6409 18.7212L34.8524 28.7536C34.6308 28.9808 34.5301 29.2997 34.5812 29.613L36.8832 43.7254C37.0176 44.5492 36.1431 45.1654 35.4125 44.7615L23.4838 38.1675C23.1827 38.0011 22.8173 38.0011 22.5162 38.1675L10.5875 44.7615C9.85692 45.1654 8.98236 44.5492 9.11674 43.7254L11.4187 29.613C11.4698 29.2997 11.3692 28.9808 11.1475 28.7536L1.35907 18.7212C0.790661 18.1386 1.1192 17.1573 1.92379 17.0343L15.3651 14.9807C15.6948 14.9303 15.9776 14.7189 16.1193 14.417L22.0948 1.68643Z" />
-                            </mask>
-                            <path
-                              d="M22.0948 1.68643C22.4547 0.919628 23.5453 0.919627 23.9052 1.68643L29.8807 14.417C30.0224 14.7189 30.3052 14.9303 30.6349 14.9807L44.0762 17.0343C44.8808 17.1573 45.2093 18.1386 44.6409 18.7212L34.8524 28.7536C34.6308 28.9808 34.5301 29.2997 34.5812 29.613L36.8832 43.7254C37.0176 44.5492 36.1431 45.1654 35.4125 44.7615L23.4838 38.1675C23.1827 38.0011 22.8173 38.0011 22.5162 38.1675L10.5875 44.7615C9.85692 45.1654 8.98236 44.5492 9.11674 43.7254L11.4187 29.613C11.4698 29.2997 11.3692 28.9808 11.1475 28.7536L1.35907 18.7212C0.790661 18.1386 1.1192 17.1573 1.92379 17.0343L15.3651 14.9807C15.6948 14.9303 15.9776 14.7189 16.1193 14.417L22.0948 1.68643Z"
-                              fill="#F5F5F5"
-                            />
-                            <path
-                              d="M10.5875 44.7614L22.5162 38.1674C22.6624 38.0866 22.8237 38.045 22.9855 38.0427V1.11133C22.6277 1.11636 22.2723 1.30803 22.0948 1.68633L16.1193 14.4169C15.9776 14.7188 15.6948 14.9302 15.3651 14.9806L1.92379 17.0342C1.1192 17.1572 0.790661 18.1385 1.35907 18.7211L11.1475 28.7535C11.3692 28.9807 11.4698 29.2996 11.4187 29.6129L9.11674 43.7253C8.98236 44.5491 9.85692 45.1653 10.5875 44.7614Z"
-                              fill="#F4A316"
-                            />
-                          </svg>
-                        ) : (
-                          <svg
-                            width="46"
-                            height="46"
-                            viewBox="0 0 46 46"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <mask
-                              id={`empty-star-${star}`}
-                              maskUnits="userSpaceOnUse"
-                              x="0.0737305"
-                              y="0.353516"
-                              width="46"
-                              height="46"
-                              fill="black"
-                            >
-                              <rect
-                                fill="white"
-                                x="0.0737305"
-                                y="0.353516"
-                                width="46"
-                                height="46"
-                              />
-                              <path d="M22.0947 1.92862C22.4546 1.16182 23.5453 1.16181 23.9052 1.92862L29.8806 14.6592C30.0223 14.9611 30.3052 15.1725 30.6348 15.2229L44.0762 17.2765C44.8808 17.3994 45.2093 18.3808 44.6409 18.9634L34.8524 28.9958C34.6308 29.223 34.5301 29.5419 34.5812 29.8552L36.8832 43.9675C37.0176 44.7914 36.143 45.4076 35.4125 45.0037L23.4838 38.4097C23.1827 38.2433 22.8172 38.2433 22.5162 38.4097L10.5875 45.0037C9.85689 45.4076 8.98233 44.7914 9.11671 43.9675L11.4187 29.8552C11.4698 29.5419 11.3692 29.223 11.1475 28.9958L1.35904 18.9634C0.79063 18.3808 1.11917 17.3994 1.92376 17.2765L15.3651 15.2229C15.6947 15.1725 15.9776 14.9611 16.1193 14.6592L22.0947 1.92862Z" />
-                            </mask>
-                            <path
-                              d="M22.0947 1.92862C22.4546 1.16182 23.5453 1.16181 23.9052 1.92862L29.8806 14.6592C30.0223 14.9611 30.3052 15.1725 30.6348 15.2229L44.0762 17.2765C44.8808 17.3994 45.2093 18.3808 44.6409 18.9634L34.8524 28.9958C34.6308 29.223 34.5301 29.5419 34.5812 29.8552L36.8832 43.9675C37.0176 44.7914 36.143 45.4076 35.4125 45.0037L23.4838 38.4097C23.1827 38.2433 22.8172 38.2433 22.5162 38.4097L10.5875 45.0037C9.85689 45.4076 8.98233 44.7914 9.11671 43.9675L11.4187 29.8552C11.4698 29.5419 11.3692 29.223 11.1475 28.9958L1.35904 18.9634C0.79063 18.3808 1.11917 17.3994 1.92376 17.2765L15.3651 15.2229C15.6947 15.1725 15.9776 14.9611 16.1193 14.6592L22.0947 1.92862Z"
-                              fill="#F5F5F5"
-                            />
-                            <path
-                              d="M15.3651 15.2229L15.4406 15.7171L15.3651 15.2229ZM1.92376 17.2765L1.84825 16.7822L1.92376 17.2765ZM11.1475 28.9958L11.5054 28.6466L11.1475 28.9958ZM10.5875 45.0037L10.3456 44.5661L10.5875 45.0037ZM9.11671 43.9675L8.62324 43.8871L9.11671 43.9675ZM23.4838 38.4097L23.7256 37.9721L23.4838 38.4097ZM22.5162 38.4097L22.2743 37.9721L22.5162 38.4097ZM36.8832 43.9675L36.3897 44.048L36.8832 43.9675ZM35.4125 45.0037L35.1706 45.4413L35.4125 45.0037ZM34.8524 28.9958L35.2103 29.345L34.8524 28.9958ZM34.5812 29.8552L35.0747 29.7747L34.5812 29.8552ZM44.0762 17.2765L44.0006 17.7708L44.0762 17.2765ZM44.6409 18.9634L44.283 18.6142L44.6409 18.9634ZM30.6348 15.2229L30.5593 15.7171L30.6348 15.2229ZM22.0947 1.92862L21.6421 1.71617L22.0947 1.92862ZM23.9052 1.92862L23.4526 2.14107L29.428 14.8717L29.8806 14.6592L30.3333 14.4468L24.3578 1.71617L23.9052 1.92862ZM30.6348 15.2229L30.5593 15.7171L44.0006 17.7708L44.0762 17.2765L44.1517 16.7822L30.7104 14.7286L30.6348 15.2229ZM44.6409 18.9634L44.283 18.6142L34.4945 28.6466L34.8524 28.9958L35.2103 29.345L44.9988 19.3126L44.6409 18.9634ZM34.5812 29.8552L34.0877 29.9356L36.3897 44.048L36.8832 43.9675L37.3767 43.8871L35.0747 29.7747L34.5812 29.8552ZM35.4125 45.0037L35.6544 44.5661L23.7256 37.9721L23.4838 38.4097L23.2419 38.8473L35.1706 45.4413L35.4125 45.0037ZM22.5162 38.4097L22.2743 37.9721L10.3456 44.5661L10.5875 45.0037L10.8294 45.4413L22.7581 38.8473L22.5162 38.4097ZM9.11671 43.9675L9.61019 44.048L11.9122 29.9356L11.4187 29.8552L10.9252 29.7747L8.62324 43.8871L9.11671 43.9675ZM11.1475 28.9958L11.5054 28.6466L1.71692 18.6142L1.35904 18.9634L1.00116 19.3126L10.7896 29.345L11.1475 28.9958ZM1.92376 17.2765L1.99928 17.7708L15.4406 15.7171L15.3651 15.2229L15.2896 14.7286L1.84825 16.7822L1.92376 17.2765ZM16.1193 14.6592L16.5719 14.8717L22.5473 2.14107L22.0947 1.92862L21.6421 1.71617L15.6667 14.4468L16.1193 14.6592ZM15.3651 15.2229L15.4406 15.7171C15.9351 15.6416 16.3594 15.3245 16.5719 14.8717L16.1193 14.6592L15.6667 14.4468C15.5958 14.5977 15.4544 14.7034 15.2896 14.7286L15.3651 15.2229ZM1.35904 18.9634L1.71692 18.6142C1.43271 18.3229 1.59698 17.8322 1.99928 17.7708L1.92376 17.2765L1.84825 16.7822C0.641352 16.9666 0.148546 18.4387 1.00116 19.3126L1.35904 18.9634ZM11.4187 29.8552L11.9122 29.9356C11.9888 29.4658 11.8379 28.9874 11.5054 28.6466L11.1475 28.9958L10.7896 29.345C10.9005 29.4586 10.9508 29.618 10.9252 29.7747L11.4187 29.8552ZM10.5875 45.0037L10.3456 44.5661C9.98028 44.7681 9.543 44.46 9.61019 44.048L9.11671 43.9675L8.62324 43.8871C8.42165 45.1229 9.7335 46.0471 10.8294 45.4413L10.5875 45.0037ZM23.4838 38.4097L23.7256 37.9721C23.2741 37.7225 22.7259 37.7225 22.2743 37.9721L22.5162 38.4097L22.7581 38.8473C22.9086 38.7641 23.0913 38.7641 23.2419 38.8473L23.4838 38.4097ZM36.8832 43.9675L36.3897 44.048C36.4569 44.46 36.0196 44.7681 35.6544 44.5661L35.4125 45.0037L35.1706 45.4413C36.2664 46.0471 37.5783 45.1229 37.3767 43.8871L36.8832 43.9675ZM34.8524 28.9958L34.4945 28.6466C34.1621 28.9874 34.0111 29.4658 34.0877 29.9356L34.5812 29.8552L35.0747 29.7747C35.0491 29.618 35.0995 29.4586 35.2103 29.345L34.8524 28.9958ZM44.0762 17.2765L44.0006 17.7708C44.4029 17.8322 44.5672 18.3229 44.283 18.6142L44.6409 18.9634L44.9988 19.3126C45.8514 18.4387 45.3586 16.9666 44.1517 16.7822L44.0762 17.2765ZM29.8806 14.6592L29.428 14.8717C29.6406 15.3245 30.0648 15.6416 30.5593 15.7171L30.6348 15.2229L30.7104 14.7286C30.5455 14.7034 30.4041 14.5977 30.3333 14.4468L29.8806 14.6592ZM23.9052 1.92862L24.3578 1.71617C23.8179 0.565964 22.182 0.565965 21.6421 1.71617L22.0947 1.92862L22.5473 2.14107C22.7273 1.75767 23.2726 1.75767 23.4526 2.14107L23.9052 1.92862Z"
-                              fill="#D1D1D1"
-                              mask={`url(#empty-star-${star})`}
-                            />
-                          </svg>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-            <button
-              type="button"
-              onClick={handleDone}
-              className="w-full h-[47px] mt-[32px] rounded-[10px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out text-white font-medium text-[16px] leading-[24px] cursor-pointer"
-            >
-              Done
-            </button>
-          </div>
-        </div>
+        <CongratsModal
+          courseTitle={courseTitle}
+          rating={rating}
+          hoverRating={hoverRating}
+          ratingSubmitted={ratingSubmitted}
+          isRating={isRating}
+          onRate={handleRate}
+          onHover={setHoverRating}
+          onDone={handleDone}
+          onClose={() => setShowCongrats(false)}
+        />
       )}
     </div>
   );

@@ -89,8 +89,8 @@ function HeroSlider() {
                             i === current
                               ? "#F5F5F5"
                               : index === 1
-                              ? "#ADADAD"
-                              : "#C1BCBC80",
+                                ? "#ADADAD"
+                                : "#C1BCBC80",
                         }}
                       />
                     ))}
@@ -106,7 +106,10 @@ function HeroSlider() {
         {/* Arrows fixed outside slider */}
         <div className="absolute bottom-[55px] right-[48px] flex items-center justify-between w-[132px] h-[54px]">
           <ArrowLeft onClick={prev} isDisabled={current === 0} />
-          <ArrowRight onClick={next} isDisabled={current === slides.length - 1} />
+          <ArrowRight
+            onClick={next}
+            isDisabled={current === slides.length - 1}
+          />
         </div>
       </div>
     </div>

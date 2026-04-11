@@ -1,12 +1,11 @@
 "use client";
-import Image from "next/image";
 import { useState } from "react";
 import CloseSvg from "../icons/CloseSvg";
 import GoBackSvg from "../icons/GoBackSvg";
-import UploadPhotoIcon from "../icons/UploadPhotoIcon";
-import ShowPassSvg from "../icons/ShowPassSvg";
-import HidePassSvg from "../icons/HidePassSvg";
-import { formatFileSize } from "../../utils/formatFileSize";
+import ProgressBars from "./ProgressBars";
+import SignUpStep1 from "./SignUpStep1";
+import SignUpStep2 from "./SignUpStep2";
+import SignUpStep3 from "./SignUpStep3";
 
 interface SignUpModalProps {
   isOpen: boolean;
@@ -22,85 +21,6 @@ const MODAL_MIN_HEIGHTS: Record<number, string> = {
 };
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
-
-const inputClass = (hasError: boolean) =>
-  `w-full mt-[8px] h-[48px] rounded-[8px] pl-[13px] pr-[15px] py-[12px] 
-   text-[14px] font-inter font-medium leading-[100%] tracking-[0%] 
-   focus:outline-none focus:ring-0 caret-[#8A8A8A]
-   placeholder:text-[#8A8A8A] placeholder:font-medium placeholder:text-[14px]
-   hover:placeholder:text-[#D1D1D1]
-   focus:placeholder:text-[#F5F5F5]
-   ${
-     hasError
-       ? "border-[1.5px] border-[#F4161A] text-[#F4161A]"
-       : "border-[1.5px] border-[#D1D1D1] text-[#3D3D3D] hover:border-[#ADADAD] focus:border-[#8A8A8A]"
-   }`;
-const labelClass = (hasError: boolean) =>
-  `mt-[24px] text-sm font-medium h-[17px] flex items-center${hasError ? " text-[#F4161A]" : ""}`;
-
-const iconColor = (hasError: boolean) => (hasError ? "#F4161A" : "#ADADAD");
-
-
-function ErrorMessage({ msg }: { msg: string }) {
-  return (
-    <p className="error-message mt-[4px] text-[12px] font-normal leading-[100%] tracking-[0%] h-[17px] flex items-center text-[#F4161A]">
-      {msg}
-    </p>
-  );
-}
-
-function OrDivider() {
-  return (
-    <div className="flex items-center w-[320px] mx-auto mt-[16px] h-[21px]">
-      <div className="flex-1 h-[1px] bg-[#D1D1D1]" />
-      <span className="px-[8px] text-[14px] font-inter font-medium leading-[100%] tracking-[0%] text-center text-[#8A8A8A]">
-        or
-      </span>
-      <div className="flex-1 h-[1px] bg-[#D1D1D1]" />
-    </div>
-  );
-}
-
-function LogInRow({ onClick }: { onClick: () => void }) {
-  return (
-    <div className="flex items-center justify-center mt-[8px]">
-      <p className="text-[#666666] font-normal text-[12px] leading-[100%] tracking-[0%] text-center">
-        Already have an account?
-      </p>
-      <p
-        className="text-[#141414] ml-[8px] decoration-skip-ink-auto font-medium text-[14px] leading-[100%] tracking-[0%] text-center underline decoration-solid decoration-[0%] underline-offset-[25%] cursor-pointer"
-        onClick={onClick}
-      >
-        Log In
-      </p>
-    </div>
-  );
-}
-
-function ProgressBars({ step }: { step: number }) {
-  const colors = [
-    step === 1 ? "#B7B3F4" : "#4F46E5",
-    step === 1 ? "#EEEDFC" : step === 2 ? "#B7B3F4" : "#4F46E5",
-    step <= 2 ? "#EEEDFC" : step === 3 ? "#B7B3F4" : "#4F46E5",
-  ];
-
-  return (
-    <div className="flex items-center w-full justify-between mt-[24px]">
-      {colors.map((color, i) => (
-        <div
-          key={i}
-          className="w-[114px] h-[8px] rounded-[30px]"
-          style={{
-            backgroundColor: color,
-            transition: "background-color 0.3s ease",
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function SignUpModal({
   isOpen,
@@ -126,12 +46,6 @@ export default function SignUpModal({
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [isConfirmPasswordFocused, setIsConfirmPasswordFocused] =
     useState(false);
-
-  const iconColor = (hasError: boolean, isFocused: boolean) => {
-    if (hasError) return "#F4161A";
-    if (isFocused) return "#8A8A8A";
-    return "#ADADAD";
-  };
 
   const handleClose = () => {
     setStep(1);
@@ -170,6 +84,23 @@ export default function SignUpModal({
     setStep(3);
   };
 
+  const handleAvatarChange = (file: File) => {
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    setAvatar(file);
+    setAvatarPreview(URL.createObjectURL(file));
+    if (!allowed.includes(file.type)) {
+      setAvatarError("Only JPG, PNG, or WebP files are allowed.");
+    } else {
+      setAvatarError("");
+    }
+  };
+
+  const handleAvatarRemove = () => {
+    setAvatar(null);
+    setAvatarPreview(null);
+    setAvatarError("");
+  };
+
   const handleSignUp = async () => {
     if (!username.trim()) return setUsernameError("Username is required.");
     if (username.length < 3)
@@ -199,8 +130,10 @@ export default function SignUpModal({
       );
 
       const rawText = await response.text();
-      let data: { data?: { token?: string }; errors?: { email?: string[]; username?: string[] } } | null =
-        null;
+      let data: {
+        data?: { token?: string };
+        errors?: { email?: string[]; username?: string[] };
+      } | null = null;
       try {
         data = JSON.parse(rawText);
       } catch {
@@ -230,15 +163,15 @@ export default function SignUpModal({
         onSuccess?.();
       }
     } catch {
-      setSubmitError("Something went wrong. Please check your connection and try again.");
+      setSubmitError(
+        "Something went wrong. Please check your connection and try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   if (!isOpen) return null;
-
-  const hasAvatar = !!(avatarPreview && avatar);
 
   return (
     <div
@@ -284,298 +217,71 @@ export default function SignUpModal({
           <ProgressBars step={step} />
 
           {step === 1 && (
-            <>
-              <div className="flex flex-col w-full">
-                <label htmlFor="email" className={labelClass(!!emailError)}>
-                  Email*
-                </label>
-                <input
-                  type="text"
-                  name="Email"
-                  id="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (emailError) setEmailError("");
-                  }}
-                  className={inputClass(!!emailError)}
-                />
-                {emailError && <ErrorMessage msg={emailError} />}
-              </div>
-              <button
-                type="button"
-                className="w-[360px] h-[47px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white mt-[18px] cursor-pointer"
-                onClick={handleNext}
-              >
-                Next
-              </button>
-              <OrDivider />
-              <div className="flex items-center justify-center mt-[8px] h-[17px]">
-                <p className="text-[#666666] font-normal text-[12px] leading-[100%] tracking-[0%] text-center">
-                  Already have an account?
-                </p>
-                <p
-                  className="text-[#141414] ml-[8px] decoration-skip-ink-auto font-medium text-[14px] leading-[100%] tracking-[0%] text-center underline decoration-solid decoration-[0%] underline-offset-[25%] cursor-pointer"
-                  onClick={() => {
-                    handleClose();
-                    onSignInClick?.();
-                  }}
-                >
-                  Log In
-                </p>
-              </div>
-            </>
+            <SignUpStep1
+              email={email}
+              emailError={emailError}
+              onEmailChange={(v) => {
+                setEmail(v);
+                if (emailError) setEmailError("");
+              }}
+              onNext={handleNext}
+              onSignInClick={() => {
+                handleClose();
+                onSignInClick?.();
+              }}
+            />
           )}
 
           {step === 2 && (
-            <>
-              {/* Password */}
-              <div className="flex flex-col w-full">
-                <label
-                  htmlFor="password"
-                  className={labelClass(!!passwordError)}
-                >
-                  Password*
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    id="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      if (passwordError) setPasswordError("");
-                    }}
-                    className={`${inputClass(!!passwordError)} pr-[40px]`}
-                    onFocus={() => setIsPasswordFocused(true)}
-                    onBlur={() => setIsPasswordFocused(false)}
-                  />
-                  <div
-                    className="absolute right-[12px] top-1/2 -translate-y-1/2 cursor-pointer mt-[4px]"
-                    onClick={() => setShowPassword((v) => !v)}
-                  >
-                    {showPassword ? (
-                      <ShowPassSvg
-                        color={iconColor(!!passwordError, isPasswordFocused)}
-                      />
-                    ) : (
-                      <HidePassSvg
-                        color={iconColor(!!passwordError, isPasswordFocused)}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col w-full">
-                <label
-                  htmlFor="confirmPassword"
-                  className={labelClass(!!passwordError)}
-                >
-                  Confirm Password*
-                </label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    id="confirmPassword"
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => {
-                      setConfirmPassword(e.target.value);
-                      if (passwordError) setPasswordError("");
-                    }}
-                    className={`${inputClass(!!passwordError)} pr-[40px]`}
-                    onFocus={() => setIsConfirmPasswordFocused(true)}
-                    onBlur={() => setIsConfirmPasswordFocused(false)}
-                  />
-                  <div
-                    className="absolute right-[12px] top-1/2 -translate-y-1/2 cursor-pointer mt-[4px]"
-                    onClick={() => setShowConfirmPassword((v) => !v)}
-                  >
-                    {showConfirmPassword ? (
-                      <ShowPassSvg
-                        color={iconColor(
-                          !!passwordError,
-                          isConfirmPasswordFocused,
-                        )}
-                      />
-                    ) : (
-                      <HidePassSvg
-                        color={iconColor(
-                          !!passwordError,
-                          isConfirmPasswordFocused,
-                        )}
-                      />
-                    )}
-                  </div>
-                </div>
-                {passwordError && <ErrorMessage msg={passwordError} />}
-              </div>
-
-              <button
-                type="button"
-                className="w-[360px] h-[47px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white mt-[16px] cursor-pointer"
-                onClick={handleNextPassword}
-              >
-                Next
-              </button>
-              <OrDivider />
-              <LogInRow
-                onClick={() => {
-                  handleClose();
-                  onSignInClick?.();
-                }}
-              />
-            </>
+            <SignUpStep2
+              password={password}
+              confirmPassword={confirmPassword}
+              passwordError={passwordError}
+              showPassword={showPassword}
+              showConfirmPassword={showConfirmPassword}
+              isPasswordFocused={isPasswordFocused}
+              isConfirmPasswordFocused={isConfirmPasswordFocused}
+              onPasswordChange={(v) => {
+                setPassword(v);
+                if (passwordError) setPasswordError("");
+              }}
+              onConfirmPasswordChange={(v) => {
+                setConfirmPassword(v);
+                if (passwordError) setPasswordError("");
+              }}
+              onTogglePassword={() => setShowPassword((v) => !v)}
+              onToggleConfirmPassword={() => setShowConfirmPassword((v) => !v)}
+              onPasswordFocus={setIsPasswordFocused}
+              onConfirmPasswordFocus={setIsConfirmPasswordFocused}
+              onNext={handleNextPassword}
+              onSignInClick={() => {
+                handleClose();
+                onSignInClick?.();
+              }}
+            />
           )}
 
           {step === 3 && (
-            <>
-              <div className="flex flex-col w-full">
-                <label
-                  htmlFor="username"
-                  className={labelClass(!!usernameError)}
-                >
-                  Username*
-                </label>
-                <input
-                  type="text"
-                  name="username"
-                  id="username"
-                  placeholder="username"
-                  value={username}
-                  onChange={(e) => {
-                    setUsername(e.target.value);
-                    if (usernameError) setUsernameError("");
-                  }}
-                  className={inputClass(!!usernameError)}
-                />
-                {usernameError && <ErrorMessage msg={usernameError} />}
-              </div>
-
-              <div className="flex flex-col w-full">
-                <label className="mt-[24px] text-sm font-medium">
-                  Upload Avatar
-                </label>
-                <div
-                  className="avatar-upload-box mt-[8px] rounded-[8px] flex items-center justify-center cursor-pointer overflow-hidden"
-                  style={{
-                    width: "360px",
-                    height: "140px",
-                    border: avatarError
-                      ? "1.5px solid #F4161A"
-                      : hasAvatar
-                        ? "1.5px solid #DDDBFA"
-                        : "1.5px solid #D1D1D1",
-                    backgroundColor: hasAvatar ? "#EEEDFC" : "transparent",
-                  }}
-                  onClick={() =>
-                    document.getElementById("avatarInput")?.click()
-                  }
-                >
-                  {hasAvatar ? (
-                    <div className="w-[240px] h-[54px] flex items-center gap-[10px]">
-                      <Image
-                        src={avatarPreview!}
-                        alt="Avatar preview"
-                        className="w-[54px] h-[54px] rounded-[40px] object-cover flex-shrink-0"
-                        width={54}
-                        height={54}
-                      />
-                      <div className="h-[41px] min-w-0 flex-1">
-                        <p className="text-[#525252] h-[15px] flex items-center font-normal text-xs leading-none tracking-normal overflow-hidden">
-                          <span className="truncate block max-w-[140px]">
-                            {avatar!.name}
-                          </span>
-                        </p>
-                        <p className="text-[#ADADAD] font-normal text-[10px] leading-none tracking-normal h-[12px] flex items-center">
-                          Size — {formatFileSize(avatar!.size)}
-                        </p>
-                        <div className="flex items-center gap-[8px] mt-[2px]">
-                          <p
-                            className="h-[12px] flex items-center text-[#4F46E5] font-medium text-[10px] leading-none tracking-normal underline decoration-solid underline-offset-[25%] decoration-[0px]"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              document.getElementById("avatarInput")?.click();
-                            }}
-                          >
-                            Change
-                          </p>
-                          <p
-                            className="h-[12px] flex items-center text-[#F4161A] font-medium text-[10px] leading-none tracking-normal underline decoration-solid underline-offset-[25%] decoration-[0px]"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setAvatar(null);
-                              setAvatarPreview(null);
-                              setAvatarError("");
-                              const input = document.getElementById("avatarInput") as HTMLInputElement;
-                              if (input) input.value = "";
-                            }}
-                          >
-                            Remove
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center">
-                      <UploadPhotoIcon />
-                      <p className="mt-[8px] text-[#666666] font-medium text-sm leading-none">
-                        Drag and drop or{" "}
-                        <span className="text-[#281ED2] underline decoration-solid underline-offset-[25%]">
-                          Upload file
-                        </span>
-                      </p>
-                      <p className="text-[#ADADAD] mt-[8px] font-normal text-xs leading-none">
-                        JPG, PNG or WebP
-                      </p>
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    id="avatarInput"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const allowed = ["image/jpeg", "image/png", "image/webp"];
-                      setAvatar(file);
-                      setAvatarPreview(URL.createObjectURL(file));
-                      if (!allowed.includes(file.type)) {
-                        setAvatarError("Only JPG, PNG, or WebP files are allowed.");
-                      } else {
-                        setAvatarError("");
-                      }
-                    }}
-                  />
-                </div>
-                {avatarError && <ErrorMessage msg={avatarError} />}
-              </div>
-
-              {submitError && <ErrorMessage msg={submitError} />}
-              <button
-                type="button"
-                className="w-[360px] h-[47px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out rounded-[10px] flex items-center justify-center font-medium text-[16px] leading-[24px] tracking-[0%] text-white mt-[18px] cursor-pointer"
-                style={{
-                  opacity: isSubmitting ? 0.7 : 1,
-                  pointerEvents: isSubmitting ? "none" : "auto",
-                }}
-                onClick={handleSignUp}
-              >
-                {isSubmitting ? "Signing Up..." : "Sign Up"}
-              </button>
-              <OrDivider />
-              <LogInRow
-                onClick={() => {
-                  handleClose();
-                  onSignInClick?.();
-                }}
-              />
-            </>
+            <SignUpStep3
+              username={username}
+              usernameError={usernameError}
+              avatar={avatar}
+              avatarPreview={avatarPreview}
+              avatarError={avatarError}
+              submitError={submitError}
+              isSubmitting={isSubmitting}
+              onUsernameChange={(v) => {
+                setUsername(v);
+                if (usernameError) setUsernameError("");
+              }}
+              onAvatarChange={handleAvatarChange}
+              onAvatarRemove={handleAvatarRemove}
+              onSubmit={handleSignUp}
+              onSignInClick={() => {
+                handleClose();
+                onSignInClick?.();
+              }}
+            />
           )}
         </div>
       </div>

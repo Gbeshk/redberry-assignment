@@ -1,44 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import StarIcon from "../icons/StarIcon";
-import CalendarIcon from "../icons/CalendarIcon";
-import TimeIcon from "../icons/TimeIcon";
-import SessionTypeIcon from "../icons/SessionTypeIcon";
-import EnrolmentListLocationIcon from "../icons/EnrolmentListLocationIcon";
-import NoEnrollmentIcon from "../icons/NoEnrollmentIcon";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-interface Enrollment {
-  id: number;
-  totalPrice: number;
-  progress: number;
-  completedAt: string | null;
-  course: {
-    id: number;
-    title: string;
-    description: string;
-    image: string;
-    basePrice: number;
-    durationWeeks: number;
-    avgRating: number;
-    reviewCount: number;
-    instructor: { id: number; name: string; avatar: string };
-    category: { id: number; name: string; icon: string };
-  };
-  schedule: {
-    weeklySchedule: { id: number; label: string; days: string[] };
-    timeSlot: { id: number; label: string; startTime: string; endTime: string };
-    sessionType: {
-      id: number;
-      name: string;
-      priceModifier: number;
-      availableSeats: number;
-      location: string;
-    };
-    location: string;
-  };
-}
+import EnrollmentListCard from "./EnrollmentListCard";
+import EmptyEnrollments from "./EmptyEnrollments";
+import { useEnrolledCourses } from "@/app/hooks/useEnrolledCourses";
 
 interface Props {
   isOpen: boolean;
@@ -47,48 +12,30 @@ interface Props {
 
 export default function EnrolledCoursesDrawer({ isOpen, onClose }: Props) {
   const router = useRouter();
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    if (!isOpen) return;
-    setLoading(true);
-    setError(null);
-    const token = localStorage.getItem("authToken");
-    fetch("https://api.redclass.redberryinternship.ge/api/enrollments", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    })
-      .then((r) => r.json())
-      .then((json) => {
-        const sorted = (json.data ?? []).sort(
-          (a: Enrollment, b: Enrollment) => b.progress - a.progress,
-        );
-        setEnrollments(sorted);
-      })
-      .catch(() => setError("Failed to load enrollments."))
-      .finally(() => setLoading(false));
-    console.log(enrollments);
-  }, [isOpen]);
+  const { enrollments, loading, error } = useEnrolledCourses(isOpen);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isOpen]);
 
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 z-40" style={{ backgroundColor: "#00000040" }} onClick={onClose} />
+        <div
+          className="fixed inset-0 z-40"
+          style={{ backgroundColor: "#00000040" }}
+          onClick={onClose}
+        />
       )}
 
       <div
-        className="fixed top-0 right-0 z-50 h-full w-[794px] bg-[#F5F5F5] items-center  flex flex-col transition-transform duration-300 ease-in-out"
+        className="fixed top-0 right-0 z-50 h-full w-[794px] bg-[#F5F5F5] items-center flex flex-col transition-transform duration-300 ease-in-out"
         style={{ transform: isOpen ? "translateX(0)" : "translateX(100%)" }}
       >
-        <div className="flex items-center w-[646px] h-[48px] justify-between mt-[60px] ">
+        <div className="flex items-center w-[646px] h-[48px] justify-between mt-[60px]">
           <p className="text-[#0A0A0A] font-semibold text-[40px] leading-none tracking-normal">
             Enrolled Courses
           </p>
@@ -100,7 +47,7 @@ export default function EnrolledCoursesDrawer({ isOpen, onClose }: Props) {
           </p>
         </div>
 
-        <div className="mt-[36px]  gap-[12px] overflow-y-auto flex flex-col ">
+        <div className="mt-[36px] gap-[12px] overflow-y-auto flex flex-col">
           {loading && (
             <p className="text-[#8A8A8A] text-[16px] text-center mt-[60px]">
               Loading...
@@ -114,108 +61,17 @@ export default function EnrolledCoursesDrawer({ isOpen, onClose }: Props) {
           )}
 
           {!loading && !error && enrollments.length === 0 && (
-            <div className="flex flex-col items-center justify-center  mt-[274px] overflow-hidden">
-              <NoEnrollmentIcon />
-              <p className="mt-[4px] h-[29px] text-[#130E67] font-semibold text-[24px] leading-[100%] tracking-[0%]">
-                No Enrolled Courses Yet
-              </p>
-              <p className="text-center text-[#130E67] h-[48px] mt-[8px]  font-medium text-[14px] leading-[100%] tracking-[0%]">
-                Your learning journey starts here! <br /> Browse courses to get
-                started.
-              </p>
-              <div
-                onClick={() => {
-                  router.push("/courses");
-                  onClose();
-                }}
-                className="w-[175px] mt-[12px] h-[58px] bg-[#4F46E5] font-medium text-[16px] leading-[24px] tracking-[0%] text-center flex items-center justify-center rounded-[8px] text-white cursor-pointer"
-              >
-                Browse Courses
-              </div>
-            </div>
+            <EmptyEnrollments
+              onBrowse={() => {
+                router.push("/courses");
+                onClose();
+              }}
+            />
           )}
+
           {!loading &&
             enrollments.map((enrollment) => (
-              <div
-                key={enrollment.id}
-                className="w-[623px] h-[295px] rounded-[12px] bg-white p-[20px]"
-              >
-                <div className="flex items-center gap-[18px]">
-                  <Image
-                    src={enrollment.course.image}
-                    width={269}
-                    height={191}
-                    alt="courseImg"
-                    className="w-[269px] h-[191px] rounded-[10px] object-cover"
-                  ></Image>
-                  <div className="h-[186px] flex w-full flex-col">
-                    <div className="h-[18px] w-full flex items-center justify-between">
-                      <p className="text-[#8A8A8A] font-inter font-medium text-sm leading-none">
-                        Instructor{" "}
-                        <span className="text-[#8A8A8A]">
-                          {enrollment.course.instructor.name}
-                        </span>
-                      </p>
-                      {enrollment.course.avgRating ? (
-                        <div className="flex gap-[4px] items-center">
-                          <StarIcon />
-                          <p className="font-medium text-sm leading-none tracking-normal text-[#525252]">
-                            {Math.round(enrollment.course.avgRating * 10) / 10}
-                          </p>
-                        </div>
-                      ) : null}
-                    </div>
-                    <p className="font-semibold text-[20px] leading-[24px] tracking-normal text-[#141414] w-[257px] mt-[8px] h-[48px] flex items-center">
-                      {enrollment.course.title}
-                    </p>
-                    <div className="flex items-center h-[26px] gap-[8px] mt-[8px]">
-                      <CalendarIcon />
-                      <p className="text-[#666666] font-normal text-sm leading-[26px] tracking-normal]">
-                        {enrollment.schedule.weeklySchedule.label}
-                      </p>
-                    </div>
-                    <div className="flex items-center h-[26px] gap-[8px] ">
-                      <TimeIcon />
-                      <p className="text-[#666666] font-normal text-sm leading-[26px] tracking-normal]">
-                        {enrollment.schedule.timeSlot.label}
-                      </p>
-                    </div>
-                    <div className="flex items-center h-[26px] gap-[8px] ">
-                      <SessionTypeIcon />
-                      <p className="text-[#666666] font-normal text-sm leading-[26px] tracking-normal]">
-                        {enrollment.schedule.sessionType.name}
-                      </p>
-                    </div>
-                    <div className="flex items-center h-[26px] gap-[8px] ">
-                      <EnrolmentListLocationIcon />
-                      <p className="text-[#666666] font-normal text-sm leading-[26px] tracking-normal]">
-                        {enrollment.schedule.location}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="w-full h-[48px] mt-[16px] flex items-center justify-between">
-                  <div className="flex flex-col h-[39px] justify-center ml-[4px]">
-                    <p className=" font-medium text-base leading-6 tracking-normal text-[#141414]">
-                      {enrollment.progress}% Complete
-                    </p>
-                    <div className="w-[442px] h-[15px] bg-[#DDDBFA] rounded-[30px]">
-                      <div
-                        className="h-full bg-[#4F46E5] rounded-[30px] transition-all duration-300"
-                        style={{ width: `${enrollment.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                  <div
-                    onClick={() => {
-                      router.push(`/courses/${enrollment.course.id}`);
-                    }}
-                    className="w-[117px] h-[48px]  flex items-center justify-center rounded-[8px] cursor-pointer border-[2px] border-[#958FEF]  font-medium text-base leading-6 tracking-normal text-[#4F46E5]"
-                  >
-                    View
-                  </div>
-                </div>
-              </div>
+              <EnrollmentListCard key={enrollment.id} enrollment={enrollment} />
             ))}
         </div>
       </div>
