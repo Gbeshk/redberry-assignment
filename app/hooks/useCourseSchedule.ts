@@ -150,7 +150,11 @@ export function useCourseSchedule(courseId: string, onSignInClick: () => void) {
   useEffect(() => {
     checkAuth();
     window.addEventListener("auth-updated", checkAuth);
-    return () => window.removeEventListener("auth-updated", checkAuth);
+    window.addEventListener("profile-updated", checkAuth);
+    return () => {
+      window.removeEventListener("auth-updated", checkAuth);
+      window.removeEventListener("profile-updated", checkAuth);
+    };
   }, []);
 
   // --- Fetch weekly schedules ---

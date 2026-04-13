@@ -15,6 +15,7 @@ interface ProfileFormFieldsProps {
   onAgeChange: (v: string) => void;
   onAgeOpenChange: (v: boolean) => void;
   clearError: (field: keyof ProfileFormErrors) => void;
+  onBlurField: (field: "fullName" | "mobile" | "age") => void;
 }
 
 const ERROR_TEXT =
@@ -34,6 +35,7 @@ export default function ProfileFormFields({
   onAgeChange,
   onAgeOpenChange,
   clearError,
+  onBlurField,
 }: ProfileFormFieldsProps) {
   return (
     <>
@@ -49,6 +51,7 @@ export default function ProfileFormFields({
               onFullNameChange(e.target.value);
               if (errors.fullName) clearError("fullName");
             }}
+            onBlur={() => onBlurField("fullName")}
             className={`${INPUT_BASE} ${errors.fullName ? "border-[#F4161A] text-[#F4161A]" : "border-[#D1D1D1] text-[#3D3D3D] hover:border-[#ADADAD] focus:border-[#8A8A8A]"}`}
           />
           <div className="absolute right-[12px] top-1/2 -translate-y-1/2">
@@ -96,6 +99,7 @@ export default function ProfileFormFields({
                 onMobileChange(e.target.value);
                 if (errors.mobile) clearError("mobile");
               }}
+              onBlur={() => onBlurField("mobile")}
               className={`flex-1 h-full pr-[40px] text-[14px] font-medium leading-[100%] tracking-[0%] caret-[#8A8A8A] placeholder:text-[#8A8A8A] placeholder:font-medium hover:placeholder:text-[#D1D1D1] focus:placeholder:text-[#F5F5F5] focus:outline-none focus:ring-0 ${errors.mobile ? "text-[#F4161A]" : "text-[#3D3D3D]"}`}
             />
             <div className="absolute right-[12px] top-1/2 -translate-y-1/2">
@@ -117,7 +121,7 @@ export default function ProfileFormFields({
                 onAgeOpenChange(false);
                 if (errors.age) clearError("age");
               }}
-              onBlur={() => onAgeOpenChange(false)}
+              onBlur={() => { onAgeOpenChange(false); onBlurField("age"); }}
               className="w-full border-[1.5px] border-[#D1D1D1] hover:border-[#ADADAD] focus:border-[#8A8A8A] rounded-[8px] h-[48px] pl-[12px] pr-[36px] text-[14px] font-medium leading-[100%] tracking-[0%] text-[#8A8A8A] focus:outline-none focus:ring-0 appearance-none bg-white cursor-pointer transition-colors duration-200"
             >
               <option value="" disabled>

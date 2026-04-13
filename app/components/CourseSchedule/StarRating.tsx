@@ -19,14 +19,6 @@ export default function StarRating({
   onRate,
   onHover,
 }: StarRatingProps) {
-  if (ratingSubmitted) {
-    return (
-      <p className="text-[#736BEA] font-medium text-[16px] leading-none tracking-normal">
-        You've already rated this course
-      </p>
-    );
-  }
-
   return (
     <div className="flex gap-[8px] mt-[18px]">
       {[1, 2, 3, 4, 5].map((star) => {
@@ -58,8 +50,10 @@ export default function StarRating({
         );
 
         const activeRating = hoverRating ?? rating;
-        const lgFull = activeRating !== null ? star <= activeRating : star <= 2;
-        const lgHalf = activeRating === null && star === 3;
+        const lgFull = ratingSubmitted
+          ? rating !== null && star <= rating
+          : activeRating !== null ? star <= activeRating : star <= 2;
+        const lgHalf = !ratingSubmitted && activeRating === null && star === 3;
         const lgStar = lgFull ? (
           <StarFull />
         ) : lgHalf ? (
@@ -72,8 +66,8 @@ export default function StarRating({
           <button
             key={star}
             type="button"
-            className="transition-transform duration-150 cursor-pointer hover:scale-110 focus-visible:outline-none focus-visible:scale-110"
-            onClick={() => onRate(star)}
+            className={`transition-transform duration-150 focus-visible:outline-none ${ratingSubmitted ? "cursor-default" : "cursor-pointer hover:scale-110 focus-visible:scale-110"}`}
+            onClick={() => !ratingSubmitted && onRate(star)}
             onMouseEnter={() => !ratingSubmitted && onHover(star)}
             onMouseLeave={() => !ratingSubmitted && onHover(null)}
           >

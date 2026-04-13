@@ -42,7 +42,7 @@ export default function Footer({
               Bootcamp
             </p>
           </div>
-          <p className="mt-[16px] text-[#130E67] font-medium text-[14px] leading-[14px] tracking-normal w-[250px]">
+          <p className="mt-[16px] text-[#130E67] font-[500] text-[14px] leading-[14px] tracking-[0px] align-middle w-[250px]">
             Your learning journey starts here! Browse courses to get started.
           </p>
           <Image

@@ -54,6 +54,30 @@ export default function AlreadyEnrolledCard({
     };
   }, [showCongrats]);
 
+  const courseId = enrollment.course?.id;
+
+  // Fetch the user's stored rating when already rated but value is unknown (e.g. after refresh)
+  useEffect(() => {
+    if (!isRated || rating !== null || !courseId) return;
+    const token = localStorage.getItem("authToken");
+    const stored = localStorage.getItem("userData");
+    if (!token || !stored) return;
+    let userId: number;
+    try { userId = JSON.parse(stored).id; } catch { return; }
+    fetch(`https://api.redclass.redberryinternship.ge/api/courses/${courseId}`, {
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        const course = Array.isArray(data.data) ? data.data[0] : data.data;
+        const review = course?.reviews?.find(
+          (r: { userId: number; rating: number }) => r.userId === userId,
+        );
+        if (review?.rating) setRating(review.rating);
+      })
+      .catch(() => {});
+  }, []);
+
   const schedule = enrollment.schedule;
   const days = schedule?.weeklySchedule?.label ?? "—";
   const timeDisplay = schedule?.timeSlot?.label ?? "—";
@@ -233,7 +257,7 @@ export default function AlreadyEnrolledCard({
           </svg>
         </button>
       )}
-      {isCompleted && !showCongrats && !ratingSubmitted && !ratingDismissed && (
+      {isCompleted && !showCongrats && !ratingDismissed && (
         <div className="relative mt-[39px] bg-white w-[473px] h-[172px] flex flex-col items-center rounded-[8px]">
           <button
             type="button"
@@ -243,7 +267,7 @@ export default function AlreadyEnrolledCard({
             <CloseIcon />
           </button>
           <p className="font-medium text-base leading-6 h-[24px] flex items-center mt-[40px] tracking-normal text-center text-[#525252]">
-            Rate your experience
+            {ratingSubmitted ? "You've already rated this course" : "Rate your experience"}
           </p>
           <StarRating
             rating={rating}

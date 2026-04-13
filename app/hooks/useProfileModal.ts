@@ -24,6 +24,7 @@ export function useProfileModal(
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAgeOpen, setIsAgeOpen] = useState(false);
+  const [apiError, setApiError] = useState("");
   const [errors, setErrors] = useState<ProfileFormErrors>({
     fullName: "",
     mobile: "",
@@ -58,6 +59,42 @@ export function useProfileModal(
       document.body.style.overflow = "";
     };
   }, [isOpen]);
+
+  const isFormValid = (() => {
+    if (!fullName.trim() || fullName.trim().length < 3 || fullName.trim().length > 50) return false;
+    const digits = mobileNumber.replace(/\s/g, "");
+    if (!digits || !digits.startsWith("5") || digits.length !== 9) return false;
+    if (!age || Number(age) < 16 || Number(age) > 120) return false;
+    return true;
+  })();
+
+  const validateField = (field: "fullName" | "mobile" | "age") => {
+    const next = { ...errors };
+
+    if (field === "fullName") {
+      if (!fullName.trim()) next.fullName = "Name is required";
+      else if (fullName.trim().length < 3) next.fullName = "Name must be at least 3 characters";
+      else if (fullName.trim().length > 50) next.fullName = "Name must not exceed 50 characters";
+      else next.fullName = "";
+    }
+
+    if (field === "mobile") {
+      const digits = mobileNumber.replace(/\s/g, "");
+      if (!digits) next.mobile = "Mobile number is required";
+      else if (!digits.startsWith("5")) next.mobile = "Georgian mobile numbers must start with 5";
+      else if (digits.length !== 9) next.mobile = "Mobile number must be exactly 9 digits";
+      else next.mobile = "";
+    }
+
+    if (field === "age") {
+      if (!age) next.age = "Age is required";
+      else if (Number(age) < 16) next.age = "You must be at least 16 years old to enroll";
+      else if (Number(age) > 120) next.age = "Please enter a valid age";
+      else next.age = "";
+    }
+
+    setErrors(next);
+  };
 
   const validate = (): boolean => {
     const next: ProfileFormErrors = { fullName: "", mobile: "", age: "" };
@@ -105,6 +142,7 @@ export function useProfileModal(
     if (!validate()) return;
 
     setIsSubmitting(true);
+    setApiError("");
     try {
       const token = localStorage.getItem("authToken");
       const digits = mobileNumber.replace(/\s/g, "");
@@ -139,9 +177,15 @@ export function useProfileModal(
         window.dispatchEvent(new Event("profile-updated"));
         onProfileUpdated?.();
         onClose();
+      } else {
+        const msg =
+          json?.message ??
+          Object.values(json?.errors ?? {}).flat().join(" ") ??
+          "Something went wrong. Please try again.";
+        setApiError(String(msg));
       }
     } catch (e) {
-      console.error(e);
+      setApiError("Something went wrong. Please check your connection and try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -158,7 +202,6 @@ export function useProfileModal(
     setErrors((prev) => ({ ...prev, [field]: "" }));
 
   return {
-    // fields
     fullName,
     setFullName,
     email,
@@ -175,7 +218,10 @@ export function useProfileModal(
     isAgeOpen,
     setIsAgeOpen,
     errors,
+    apiError,
+    isFormValid,
     clearError,
+    validateField,
     handleUpdate,
     handleAvatarChange,
   };
