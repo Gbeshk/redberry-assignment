@@ -48,7 +48,10 @@ export default function EnrolledCoursesDrawer({ isOpen, onClose }: Props) {
           </p>
         </div>
 
-        <div className="mt-[36px] gap-[12px] overflow-y-auto flex flex-col scrollbar-none" style={{ scrollbarWidth: "none" }}>
+        <div
+          className="mt-[36px] gap-[12px] overflow-y-auto flex flex-col scrollbar-none pb-[36px]"
+          style={{ scrollbarWidth: "none" }}
+        >
           {loading && (
             <div className="flex items-center justify-center mt-[60px]">
               <Spinner size={48} />
@@ -72,7 +75,11 @@ export default function EnrolledCoursesDrawer({ isOpen, onClose }: Props) {
 
           {!loading &&
             enrollments.map((enrollment) => (
-              <EnrollmentListCard key={enrollment.id} enrollment={enrollment} onClose={onClose} />
+              <EnrollmentListCard
+                key={enrollment.id}
+                enrollment={enrollment}
+                onClose={onClose}
+              />
             ))}
         </div>
       </div>

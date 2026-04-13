@@ -56,7 +56,11 @@ export default function ClientLayout({
       refreshUser();
     };
     window.addEventListener("auth-updated", handleAuthUpdated);
-    return () => window.removeEventListener("auth-updated", handleAuthUpdated);
+    window.addEventListener("profile-updated", refreshUser);
+    return () => {
+      window.removeEventListener("auth-updated", handleAuthUpdated);
+      window.removeEventListener("profile-updated", refreshUser);
+    };
   }, []);
 
   useEffect(() => {

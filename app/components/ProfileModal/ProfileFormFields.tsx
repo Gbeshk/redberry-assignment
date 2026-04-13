@@ -123,7 +123,7 @@ export default function ProfileFormFields({
               <option value="" disabled>
                 Age
               </option>
-              {Array.from({ length: 83 }, (_, i) => i + 18).map((n) => (
+              {Array.from({ length: 105 }, (_, i) => i + 16).map((n) => (
                 <option key={n} value={n}>
                   {n}
                 </option>

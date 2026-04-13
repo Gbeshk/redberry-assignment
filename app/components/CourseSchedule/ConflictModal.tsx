@@ -67,14 +67,16 @@ export default function ConflictModal({
 
         <div className="flex mt-[40px] w-full gap-[8px] justify-between">
           <button
+            type="button"
             onClick={onConfirm}
-            className="w-full h-[58px] rounded-[8px] font-medium text-base leading-6 tracking-normal text-center border-[2px] border-[#958FEF] text-[#4F46E5] text-[16px] cursor-pointer"
+            className="w-full h-[58px] rounded-[8px] font-medium text-base leading-6 tracking-normal text-center border-[2px] border-[#958FEF] text-[#4F46E5] text-[16px] cursor-pointer hover:bg-[#281ED2] hover:text-white hover:border-[#281ED2] active:bg-[#1E169D] active:border-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:text-white focus-visible:border-[#1E169D] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out"
           >
             Continue Anyway
           </button>
           <button
+            type="button"
             onClick={onCancel}
-            className="w-full h-[58px] rounded-[8px] font-medium text-base leading-6 tracking-normal text-center bg-[#4F46E5] text-white text-[16px] cursor-pointer"
+            className="w-full h-[58px] rounded-[8px] font-medium text-base leading-6 tracking-normal text-center bg-[#4F46E5] text-white text-[16px] cursor-pointer hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out"
           >
             Cancel
           </button>

@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 import CloseSvg from "@/app/components/icons/CloseSvg";
 import ProfileModalHeader from "./ProfileModalHeader";
 import ProfileFormFields from "./ProfileFormFields";
@@ -17,6 +18,14 @@ export default function ProfileModal({
   onProfileUpdated,
 }: ProfileModalProps) {
   const s = useProfileModal(isOpen, onClose, onProfileUpdated);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    if (isOpen) document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

@@ -60,7 +60,9 @@ export default function Home() {
         onClose={() => setShowSignUpModal(false)}
         onSuccess={() => {
           setShowSignUpModal(false);
-          setShowSignInModal(true);
+          setIsLoggedIn(true);
+          const token = localStorage.getItem("authToken");
+          if (token) fetchUserData(token);
         }}
         onSignInClick={() => {
           setShowSignUpModal(false);

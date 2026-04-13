@@ -99,7 +99,10 @@ export default function CoursesFilterPanel({
               Topics
             </p>
             <div className="flex items-center w-full mt-[24px] flex-wrap gap-[8px]">
-              {topics.map((topic) => (
+              {(selectedCategories.length === 0
+                ? topics
+                : topics.filter((t) => selectedCategories.includes(t.categoryId))
+              ).map((topic) => (
                 <TopicChip
                   key={topic.id}
                   topic={topic}

@@ -37,7 +37,7 @@ export default function PriceSummary({
         </p>
         <p className="text-[#292929] font-medium text-[16px] leading-[24px] tracking-normal flex items-center justify-end gap-[4px]">
           <span className="translate-y-[-1px]">+</span>
-          <span>$0</span>
+          <span>${basePrice}</span>
         </p>
       </div>
       <div className="h-[24px] flex items-center justify-between w-[450px] mt-[12px]">

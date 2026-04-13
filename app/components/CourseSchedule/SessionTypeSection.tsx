@@ -127,7 +127,7 @@ export default function SessionTypeSection({
     if (s.availableSeats === 0)
       return (
         <p className="font-medium text-[12px] text-[#F4161A] leading-none tracking-normal">
-          No Seats Available
+          Fully Booked
         </p>
       );
     if (s.availableSeats <= 5) {

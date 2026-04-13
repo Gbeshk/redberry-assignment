@@ -136,7 +136,7 @@ export function useProfileModal(
         setAvatarFile(null);
         setAvatarPreview(null);
         localStorage.setItem("userData", JSON.stringify(u));
-        window.dispatchEvent(new Event("auth-updated"));
+        window.dispatchEvent(new Event("profile-updated"));
         onProfileUpdated?.();
         onClose();
       }
