@@ -5,13 +5,15 @@ const BASE = "https://api.redclass.redberryinternship.ge/api";
 
 export function useFeaturedCourses() {
   const [courses, setCourses] = useState<CourseBase[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch(`${BASE}/courses/featured`)
       .then((res) => res.json())
       .then((data) => setCourses(data.data ?? []))
-      .catch((err) => console.error("Error fetching featured courses:", err));
+      .catch((err) => console.error("Error fetching featured courses:", err))
+      .finally(() => setLoading(false));
   }, []);
 
-  return { courses };
+  return { courses, loading };
 }

@@ -1,5 +1,6 @@
 import StarFull from "@/app/components/icons/StarFull";
 import StarEmpty from "@/app/components/icons/StarEmpty";
+import StarHalf from "@/app/components/icons/StarHalf";
 
 interface StarRatingProps {
   rating: number | null;
@@ -27,7 +28,7 @@ export default function StarRating({
   }
 
   return (
-    <div className="flex gap-[8px]">
+    <div className="flex gap-[8px] mt-[18px]">
       {[1, 2, 3, 4, 5].map((star) => {
         const active = hoverRating ?? rating ?? 0;
         const filled = star <= active;
@@ -56,8 +57,13 @@ export default function StarRating({
           </svg>
         );
 
-        const lgStar = filled ? (
+        const activeRating = hoverRating ?? rating;
+        const lgFull = activeRating !== null ? star <= activeRating : star <= 2;
+        const lgHalf = activeRating === null && star === 3;
+        const lgStar = lgFull ? (
           <StarFull />
+        ) : lgHalf ? (
+          <StarHalf />
         ) : (
           <StarEmpty id={`modal-${star}`} />
         );

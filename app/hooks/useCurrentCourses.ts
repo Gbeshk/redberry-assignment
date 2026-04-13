@@ -30,17 +30,32 @@ export function useCurrentCourses() {
     setIsLoggedIn(true);
     setLoading(true);
 
-    fetch(`${BASE}/enrollments`, {
+    fetch(`${BASE}/courses/in-progress`, {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/json",
       },
     })
       .then((r) => r.json())
-      .then((json) => {
-        const data: Enrollment[] = json.data ?? [];
-        const sorted = [...data].sort((a, b) => b.progress - a.progress);
-        setEnrollments(sorted.slice(0, 3));
+      .then(async (json) => {
+        const data: Enrollment[] = json.data ?? json ?? [];
+        const sorted = [...data].sort((a, b) => b.progress - a.progress).slice(0, 3);
+        await Promise.all(
+          sorted.map(async (e) => {
+            try {
+              const res = await fetch(`${BASE}/courses/${e.course.id}`, {
+                headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+              });
+              const courseJson = await res.json();
+              const course = Array.isArray(courseJson.data) ? courseJson.data[0] : courseJson.data;
+              const reviews: { rating: number }[] = course?.reviews ?? [];
+              e.course.avgRating = reviews.length > 0
+                ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+                : null;
+            } catch {}
+          })
+        );
+        setEnrollments(sorted);
       })
       .catch(() => {})
       .finally(() => setLoading(false));

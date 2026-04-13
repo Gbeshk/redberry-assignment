@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import EnrollmentListCard from "./EnrollmentListCard";
 import EmptyEnrollments from "./EmptyEnrollments";
 import { useEnrolledCourses } from "@/app/hooks/useEnrolledCourses";
+import Spinner from "@/app/components/ui/Spinner";
 
 interface Props {
   isOpen: boolean;
@@ -47,11 +48,11 @@ export default function EnrolledCoursesDrawer({ isOpen, onClose }: Props) {
           </p>
         </div>
 
-        <div className="mt-[36px] gap-[12px] overflow-y-auto flex flex-col">
+        <div className="mt-[36px] gap-[12px] overflow-y-auto flex flex-col scrollbar-none" style={{ scrollbarWidth: "none" }}>
           {loading && (
-            <p className="text-[#8A8A8A] text-[16px] text-center mt-[60px]">
-              Loading...
-            </p>
+            <div className="flex items-center justify-center mt-[60px]">
+              <Spinner size={48} />
+            </div>
           )}
 
           {error && (
@@ -71,7 +72,7 @@ export default function EnrolledCoursesDrawer({ isOpen, onClose }: Props) {
 
           {!loading &&
             enrollments.map((enrollment) => (
-              <EnrollmentListCard key={enrollment.id} enrollment={enrollment} />
+              <EnrollmentListCard key={enrollment.id} enrollment={enrollment} onClose={onClose} />
             ))}
         </div>
       </div>

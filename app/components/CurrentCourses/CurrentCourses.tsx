@@ -2,6 +2,7 @@
 import EnrollmentCard from "./EnrollmentCard";
 import SignInPromptOverlay from "./SignInPromptOverlay";
 import { useCurrentCourses } from "@/app/hooks/useCurrentCourses";
+import Spinner from "@/app/components/ui/Spinner";
 
 interface CurrentCoursesProps {
   onSignInClick?: () => void;
@@ -14,8 +15,7 @@ export default function CurrentCourses({
 }: CurrentCoursesProps) {
   const { isLoggedIn, enrollments, loading, slots } = useCurrentCourses();
 
-  if (loading) return null;
-  if (isLoggedIn && enrollments.length === 0) return null;
+  if (isLoggedIn && !loading && enrollments.length === 0) return null;
 
   return (
     <div className="w-[1566px] mx-auto mt-[64px]">
@@ -35,16 +35,24 @@ export default function CurrentCourses({
         </p>
       </div>
 
-      <div className="w-full mt-[32px] h-[219px] flex items-center justify-between relative">
-        {!isLoggedIn && <SignInPromptOverlay onSignInClick={onSignInClick} />}
-        {slots.map((enrollment, i) => (
-          <EnrollmentCard
-            key={i}
-            enrollment={enrollment}
-            index={i}
-            isLoggedIn={isLoggedIn}
-          />
-        ))}
+      <div className="w-full mt-[32px] h-[219px] flex items-center gap-[24px] relative">
+        {loading ? (
+          <div className="flex items-center justify-center w-full">
+            <Spinner size={48} />
+          </div>
+        ) : (
+          <>
+            {!isLoggedIn && <SignInPromptOverlay onSignInClick={onSignInClick} />}
+            {(isLoggedIn ? enrollments : slots).map((enrollment, i) => (
+              <EnrollmentCard
+                key={i}
+                enrollment={enrollment}
+                index={i}
+                isLoggedIn={isLoggedIn}
+              />
+            ))}
+          </>
+        )}
       </div>
     </div>
   );

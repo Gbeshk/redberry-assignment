@@ -47,9 +47,11 @@ export function useCoursesList({
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAll = async () => {
+      setLoading(true);
       let page = 1;
       let collected: Course[] = [];
       let hasMore = true;
@@ -63,6 +65,7 @@ export function useCoursesList({
         page++;
       }
       setAllCourses(collected);
+      setLoading(false);
     };
     fetchAll();
   }, []);
@@ -86,13 +89,13 @@ export function useCoursesList({
   const sortedCourses = [...filteredCourses].sort((a, b) => {
     switch (sortBy) {
       case "newest":
-        return b.id - a.id;
+        return a.id - b.id;
       case "price_asc":
         return parseFloat(a.basePrice) - parseFloat(b.basePrice);
       case "price_desc":
         return parseFloat(b.basePrice) - parseFloat(a.basePrice);
       case "popular":
-        return (b.avgRating ?? 0) - (a.avgRating ?? 0);
+        return (b.reviewCount ?? 0) - (a.reviewCount ?? 0);
       case "title_az":
         return a.title.localeCompare(b.title);
       default:
@@ -118,5 +121,6 @@ export function useCoursesList({
     setCurrentPage,
     sortBy,
     handleSortChange,
+    loading,
   };
 }

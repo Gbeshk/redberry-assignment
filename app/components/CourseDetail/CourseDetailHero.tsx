@@ -40,7 +40,7 @@ export default function CourseDetailHero({ course }: CourseDetailHeroProps) {
           </p>
           <HoursIcon />
           <p className="flex items-center h-[17px] font-medium text-[14px] leading-none tracking-normal text-[#525252]">
-            12 Weeks
+            {course.hours} Hours
           </p>
         </div>
 

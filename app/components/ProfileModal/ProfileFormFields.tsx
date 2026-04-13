@@ -18,7 +18,7 @@ interface ProfileFormFieldsProps {
 }
 
 const ERROR_TEXT =
-  "mt-[4px] text-[12px] font-normal leading-[100%] tracking-[0%] text-[#F4161A] truncate";
+  "mt-[4px] text-[12px] font-normal leading-normal tracking-[0%] text-[#F4161A]";
 const INPUT_BASE =
   "w-full border-[1.5px] h-[48px] rounded-[8px] p-[12px] pr-[40px] text-[14px] font-medium leading-[100%] tracking-[0%] caret-[#8A8A8A] placeholder:text-[#8A8A8A] placeholder:font-medium hover:placeholder:text-[#D1D1D1] focus:placeholder:text-[#F5F5F5] focus:outline-none focus:ring-0 transition-colors duration-200";
 
@@ -84,7 +84,7 @@ export default function ProfileFormFields({
             className={`group relative mt-[8px] flex items-center border-[1.5px] rounded-[8px] h-[48px] overflow-hidden transition-colors duration-200 ${errors.mobile ? "border-[#F4161A]" : "border-[#D1D1D1] hover:border-[#ADADAD] focus-within:border-[#8A8A8A]"}`}
           >
             <span
-              className={`pl-[12px] pr-[8px] mr-[8px] text-[14px] font-medium h-full flex items-center shrink-0 border-r transition-colors duration-200 ${errors.mobile ? "text-[#F4161A] border-[#F4161A]" : "text-[#8A8A8A] border-[#D1D1D1] group-hover:text-[#ADADAD] group-hover:border-[#ADADAD] group-focus-within:text-[#525252] group-focus-within:border-[#8A8A8A]"}`}
+              className={`pl-[12px] pr-[4px] text-[14px] font-medium h-full flex items-center shrink-0 transition-colors duration-200 ${errors.mobile ? "text-[#F4161A]" : "text-[#8A8A8A] group-hover:text-[#ADADAD] group-focus-within:text-[#525252]"}`}
             >
               +995
             </span>
@@ -107,7 +107,7 @@ export default function ProfileFormFields({
 
         {/* Age */}
         <div className="flex flex-col w-[85px]">
-          <label className="text-sm font-medium">Age</label>
+          <label className="text-sm font-medium leading-normal">Age</label>
           <div className="relative mt-[8px]">
             <select
               value={age}

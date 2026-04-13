@@ -1,11 +1,12 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import ClearFiltersIcon from "@/app/components/icons/ClearFiltersIcon";
 import CategoryChip from "./CategoryChip";
 import TopicChip from "./TopicChip";
 import InstructorChip from "./InstructorChip";
 import ActiveFiltersBar from "./ActiveFiltersBar";
 import { Category, Topic, Instructor } from "@/app/types/filters";
+import Spinner from "@/app/components/ui/Spinner";
 
 interface CoursesFilterPanelProps {
   selectedCategories: number[];
@@ -31,9 +32,11 @@ export default function CoursesFilterPanel({
   const [categories, setCategories] = useState<Category[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [instructors, setInstructors] = useState<Instructor[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchFilters = async () => {
+      setLoading(true);
       const [catRes, topicRes, instructorRes] = await Promise.all([
         fetch("https://api.redclass.redberryinternship.ge/api/categories"),
         fetch("https://api.redclass.redberryinternship.ge/api/topics"),
@@ -47,6 +50,7 @@ export default function CoursesFilterPanel({
       setCategories(catData.data ?? []);
       setTopics(topicData.data ?? []);
       setInstructors(instructorData.data ?? []);
+      setLoading(false);
     };
     fetchFilters();
   }, []);
@@ -68,53 +72,61 @@ export default function CoursesFilterPanel({
         </div>
       </div>
 
-      <div className="w-[309px] mt-[32px]">
-        <p className="h-[22px] flex items-center text-[#666666] font-medium text-[18px] leading-[100%] tracking-[0%]">
-          Categories
-        </p>
-        <div className="flex items-center w-full mt-[24px] flex-wrap gap-[8px]">
-          {categories.map((cat) => (
-            <CategoryChip
-              key={cat.id}
-              category={cat}
-              active={selectedCategories.includes(cat.id)}
-              onClick={() => onToggleCategory(cat.id)}
-            />
-          ))}
+      {loading ? (
+        <div className="flex items-center justify-center w-full mt-[60px]">
+          <Spinner size={40} />
         </div>
-      </div>
+      ) : (
+        <>
+          <div className="w-[309px] mt-[32px]">
+            <p className="h-[22px] flex items-center text-[#666666] font-medium text-[18px] leading-[100%] tracking-[0%]">
+              Categories
+            </p>
+            <div className="flex items-center w-full mt-[24px] flex-wrap gap-[8px]">
+              {categories.map((cat) => (
+                <CategoryChip
+                  key={cat.id}
+                  category={cat}
+                  active={selectedCategories.includes(cat.id)}
+                  onClick={() => onToggleCategory(cat.id)}
+                />
+              ))}
+            </div>
+          </div>
 
-      <div className="w-[309px] mt-[56px]">
-        <p className="h-[22px] flex items-center text-[#666666] font-medium text-[18px] leading-[100%] tracking-[0%]">
-          Topics
-        </p>
-        <div className="flex items-center w-full mt-[24px] flex-wrap gap-[8px]">
-          {topics.map((topic) => (
-            <TopicChip
-              key={topic.id}
-              topic={topic}
-              active={selectedTopics.includes(topic.id)}
-              onClick={() => onToggleTopic(topic.id)}
-            />
-          ))}
-        </div>
-      </div>
+          <div className="w-[309px] mt-[56px]">
+            <p className="h-[22px] flex items-center text-[#666666] font-medium text-[18px] leading-[100%] tracking-[0%]">
+              Topics
+            </p>
+            <div className="flex items-center w-full mt-[24px] flex-wrap gap-[8px]">
+              {topics.map((topic) => (
+                <TopicChip
+                  key={topic.id}
+                  topic={topic}
+                  active={selectedTopics.includes(topic.id)}
+                  onClick={() => onToggleTopic(topic.id)}
+                />
+              ))}
+            </div>
+          </div>
 
-      <div className="w-[309px] mt-[56px]">
-        <p className="h-[22px] flex items-center text-[#666666] font-medium text-[18px] leading-[100%] tracking-[0%]">
-          Instructor
-        </p>
-        <div className="flex items-center w-full mt-[24px] flex-wrap gap-[8px]">
-          {instructors.map((instructor) => (
-            <InstructorChip
-              key={instructor.id}
-              instructor={instructor}
-              active={selectedInstructors.includes(instructor.id)}
-              onClick={() => onToggleInstructor(instructor.id)}
-            />
-          ))}
-        </div>
-      </div>
+          <div className="w-[309px] mt-[56px]">
+            <p className="h-[22px] flex items-center text-[#666666] font-medium text-[18px] leading-[100%] tracking-[0%]">
+              Instructor
+            </p>
+            <div className="flex items-center w-full mt-[24px] flex-wrap gap-[8px]">
+              {instructors.map((instructor) => (
+                <InstructorChip
+                  key={instructor.id}
+                  instructor={instructor}
+                  active={selectedInstructors.includes(instructor.id)}
+                  onClick={() => onToggleInstructor(instructor.id)}
+                />
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       <ActiveFiltersBar total={totalActiveFilters} />
     </div>

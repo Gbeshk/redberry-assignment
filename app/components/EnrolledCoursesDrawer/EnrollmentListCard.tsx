@@ -10,8 +10,10 @@ import { FullEnrollment } from "@/app/types/enrollment";
 
 export default function EnrollmentListCard({
   enrollment,
+  onClose,
 }: {
   enrollment: FullEnrollment;
+  onClose: () => void;
 }) {
   const router = useRouter();
 
@@ -60,10 +62,12 @@ export default function EnrollmentListCard({
             icon={<SessionTypeIcon />}
             label={enrollment.schedule.sessionType.name}
           />
-          <EnrollmentScheduleRow
-            icon={<EnrolmentListLocationIcon />}
-            label={enrollment.schedule.location}
-          />
+          {enrollment.schedule.sessionType.name.toLowerCase() !== "online" && (
+            <EnrollmentScheduleRow
+              icon={<EnrolmentListLocationIcon />}
+              label={enrollment.schedule.location}
+            />
+          )}
         </div>
       </div>
 
@@ -79,12 +83,13 @@ export default function EnrollmentListCard({
             />
           </div>
         </div>
-        <div
-          onClick={() => router.push(`/courses/${enrollment.course.id}`)}
-          className="w-[117px] h-[48px] flex items-center justify-center rounded-[8px] cursor-pointer border-[2px] border-[#958FEF] font-medium text-base leading-6 tracking-normal text-[#4F46E5]"
+        <button
+          type="button"
+          onClick={() => { router.push(`/courses/${enrollment.course.id}`); onClose(); }}
+          className="w-[117px] h-[48px] flex items-center justify-center rounded-[8px] cursor-pointer border-[2px] border-[#958FEF] font-medium text-base leading-6 tracking-normal text-[#4F46E5] hover:bg-[#281ED2] hover:text-white hover:border-[#281ED2] active:bg-[#1E169D] active:text-white active:border-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:text-white focus-visible:border-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-[300ms] ease-out"
         >
           View
-        </div>
+        </button>
       </div>
     </div>
   );

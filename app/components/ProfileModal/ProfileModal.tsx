@@ -11,7 +11,11 @@ interface ProfileModalProps {
   onProfileUpdated?: () => void;
 }
 
-export default function ProfileModal({ isOpen, onClose, onProfileUpdated }: ProfileModalProps) {
+export default function ProfileModal({
+  isOpen,
+  onClose,
+  onProfileUpdated,
+}: ProfileModalProps) {
   const s = useProfileModal(isOpen, onClose, onProfileUpdated);
 
   if (!isOpen) return null;
@@ -27,7 +31,10 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated }: Prof
         style={{ width: "460px", minHeight: "730px" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="cursor-pointer absolute top-[21px] right-[12px]" onClick={onClose}>
+        <div
+          className="cursor-pointer absolute top-[21px] right-[12px]"
+          onClick={onClose}
+        >
           <CloseSvg />
         </div>
 

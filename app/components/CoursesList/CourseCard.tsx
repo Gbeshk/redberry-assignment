@@ -72,9 +72,12 @@ export default function CourseCard({ course }: { course: Course }) {
             ${course.basePrice}
           </p>
         </div>
-        <div className="w-[103px] h-[48px] flex items-center cursor-pointer justify-center bg-[#4F46E5] text-white font-medium text-[16px] leading-[24px] tracking-normal rounded-[8px]">
+        <button
+          type="button"
+          className="w-[103px] h-[48px] flex items-center cursor-pointer justify-center bg-[#4F46E5] text-white font-medium text-[16px] leading-[24px] tracking-normal rounded-[8px] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-[300ms] ease-out"
+        >
           Details
-        </div>
+        </button>
       </div>
     </div>
   );

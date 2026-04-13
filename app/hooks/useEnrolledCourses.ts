@@ -21,9 +21,24 @@ export function useEnrolledCourses(isOpen: boolean) {
       },
     })
       .then((r) => r.json())
-      .then((json) => {
-        const sorted = (json.data ?? []).sort(
+      .then(async (json) => {
+        const sorted: FullEnrollment[] = (json.data ?? []).sort(
           (a: FullEnrollment, b: FullEnrollment) => b.progress - a.progress,
+        );
+        await Promise.all(
+          sorted.map(async (e) => {
+            try {
+              const res = await fetch(`${BASE}/courses/${e.course.id}`, {
+                headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+              });
+              const courseJson = await res.json();
+              const course = Array.isArray(courseJson.data) ? courseJson.data[0] : courseJson.data;
+              const reviews: { rating: number }[] = course?.reviews ?? [];
+              e.course.avgRating = reviews.length > 0
+                ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+                : 0;
+            } catch {}
+          })
         );
         setEnrollments(sorted);
       })

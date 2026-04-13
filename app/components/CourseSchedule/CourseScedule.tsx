@@ -8,6 +8,7 @@ import SessionTypeSection from "./SessionTypeSection";
 import PriceSummary from "./PriceSummary";
 import SuccessModal from "./SuccessModal";
 import CompleteProfileModal from "./CompleteProfileModal";
+import { useState } from "react";
 import { useCourseSchedule } from "@/app/hooks/useCourseSchedule";
 
 interface CourseScheduleProps {
@@ -28,15 +29,25 @@ export default function CourseScedule({
   onCompleteProfileClick,
 }: CourseScheduleProps) {
   const s = useCourseSchedule(courseId, onSignInClick);
+  const [hasRated, setHasRated] = useState(isRated);
 
-  if (!s.enrollmentChecked) return null;
+  if (!s.enrollmentChecked) return (
+    <div className="w-[530px] space-y-[12px] animate-pulse">
+      <div className="h-[64px] w-full rounded-[12px] bg-[#E8E8E8]" />
+      <div className="h-[64px] w-full rounded-[12px] bg-[#E8E8E8]" />
+      <div className="h-[64px] w-full rounded-[12px] bg-[#E8E8E8]" />
+      <div className="mt-[24px] h-[80px] w-full rounded-[12px] bg-[#E8E8E8]" />
+      <div className="h-[52px] w-full rounded-[12px] bg-[#E8E8E8]" />
+    </div>
+  );
 
   if (s.isEnrolled && s.enrollmentDetail) {
     return (
       <AlreadyEnrolledCard
         enrollment={s.enrollmentDetail}
-        isRated={isRated}
+        isRated={hasRated}
         courseTitle={courseTitle}
+        onRated={() => setHasRated(true)}
         onUnenroll={() => {
           s.setIsEnrolled(false);
           s.setEnrollmentDetail(null);

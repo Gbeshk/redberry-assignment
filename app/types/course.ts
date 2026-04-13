@@ -22,6 +22,7 @@ export interface Course {
   image: string;
   basePrice: number;
   durationWeeks: number;
+  hours: number;
   isFeatured: boolean;
   avgRating: number;
   reviewCount: number;

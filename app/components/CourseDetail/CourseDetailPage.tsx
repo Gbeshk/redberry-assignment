@@ -47,7 +47,41 @@ export default function CourseDetailPage() {
       });
   }, [id]);
 
-  if (!course) return <div>Loading...</div>;
+  if (!course) return (
+    <div className="w-[1566px] mx-auto mt-[64px] animate-pulse">
+      {/* breadcrumb */}
+      <div className="h-[18px] w-[220px] rounded bg-[#E8E8E8]" />
+      {/* title */}
+      <div className="mt-[32px] h-[40px] w-[500px] rounded bg-[#E8E8E8]" />
+
+      <div className="w-full flex justify-between mt-[24px]">
+        {/* left column */}
+        <div className="w-[903px]">
+          <div className="w-[903px] h-[474px] rounded-[10px] bg-[#E8E8E8]" />
+          <div className="mt-[16px] h-[39px] flex items-center justify-between">
+            <div className="h-[17px] w-[160px] rounded bg-[#E8E8E8]" />
+            <div className="h-[39px] w-[140px] rounded-[12px] bg-[#E8E8E8]" />
+          </div>
+          <div className="mt-[18px] h-[46px] w-[200px] rounded-[12px] bg-[#E8E8E8]" />
+          <div className="mt-[32px] space-y-[12px]">
+            <div className="h-[18px] w-full rounded bg-[#E8E8E8]" />
+            <div className="h-[18px] w-[90%] rounded bg-[#E8E8E8]" />
+            <div className="h-[18px] w-[80%] rounded bg-[#E8E8E8]" />
+            <div className="h-[18px] w-[85%] rounded bg-[#E8E8E8]" />
+          </div>
+        </div>
+
+        {/* right column — schedule panel */}
+        <div className="w-[530px] space-y-[12px]">
+          <div className="h-[64px] w-full rounded-[12px] bg-[#E8E8E8]" />
+          <div className="h-[64px] w-full rounded-[12px] bg-[#E8E8E8]" />
+          <div className="h-[64px] w-full rounded-[12px] bg-[#E8E8E8]" />
+          <div className="mt-[24px] h-[80px] w-full rounded-[12px] bg-[#E8E8E8]" />
+          <div className="h-[52px] w-full rounded-[12px] bg-[#E8E8E8]" />
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="w-[1566px] mx-auto mt-[64px]">

@@ -10,6 +10,7 @@ import EnrollmentInfoRow from "./EnrollmentInfoRow";
 import ProgressBar from "./ProgressBar";
 import StarRating from "./StarRating";
 import CongratsModal from "./CongratsModal";
+import CloseIcon from "@/app/components/icons/CloseIcon";
 import { EnrollmentDetail } from "@/app/types/enrollment";
 
 const SESSION_ICONS: Record<string, React.ReactNode> = {
@@ -27,11 +28,13 @@ export default function AlreadyEnrolledCard({
   enrollment,
   isRated,
   courseTitle,
+  onRated,
   onUnenroll,
 }: {
   enrollment: EnrollmentDetail;
   isRated: boolean;
   courseTitle: string;
+  onRated: () => void;
   onUnenroll: () => void;
 }) {
   const [isCompleted, setIsCompleted] = useState(enrollment.progress >= 100);
@@ -42,6 +45,7 @@ export default function AlreadyEnrolledCard({
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [isRating, setIsRating] = useState(false);
   const [ratingSubmitted, setRatingSubmitted] = useState(isRated);
+  const [ratingDismissed, setRatingDismissed] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = showCongrats ? "hidden" : "";
@@ -61,6 +65,34 @@ export default function AlreadyEnrolledCard({
 
   const handleRate = (star: number) => {
     if (!ratingSubmitted) setRating(star);
+  };
+
+  const handlePageRate = async (star: number) => {
+    if (ratingSubmitted) return;
+    setRating(star);
+    setIsRating(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await fetch(
+        `https://api.redclass.redberryinternship.ge/api/courses/${enrollment.course?.id}/reviews`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ rating: star }),
+        },
+      );
+      if (res.ok || res.status === 409) {
+        setRatingSubmitted(true);
+        onRated();
+      }
+    } catch {
+    } finally {
+      setIsRating(false);
+    }
   };
 
   const handleRetake = async () => {
@@ -125,7 +157,10 @@ export default function AlreadyEnrolledCard({
             body: JSON.stringify({ rating }),
           },
         );
-        if (res.ok || res.status === 409) setRatingSubmitted(true);
+        if (res.ok || res.status === 409) {
+          setRatingSubmitted(true);
+          onRated();
+        }
       } catch {
       } finally {
         setIsRating(false);
@@ -145,7 +180,6 @@ export default function AlreadyEnrolledCard({
       >
         {isCompleted ? "Completed" : "Enrolled"}
       </div>
-
       <EnrollmentInfoRow icon={<Calendar />} label={days} />
       <EnrollmentInfoRow icon={<SmallTimeIcon />} label={timeDisplay} />
       <EnrollmentInfoRow
@@ -155,27 +189,7 @@ export default function AlreadyEnrolledCard({
       {!isOnline && location && (
         <EnrollmentInfoRow icon={<Location />} label={location} />
       )}
-
       <ProgressBar progress={progress} />
-
-      {isCompleted && (
-        <div className="mt-[32px]">
-          {!ratingSubmitted && (
-            <p className="text-[#666666] font-medium text-[16px] leading-none tracking-normal mb-[12px]">
-              Rate this course
-            </p>
-          )}
-          <StarRating
-            rating={rating}
-            hoverRating={hoverRating}
-            ratingSubmitted={ratingSubmitted}
-            size="sm"
-            onRate={handleRate}
-            onHover={setHoverRating}
-          />
-        </div>
-      )}
-
       {isCompleted ? (
         <button
           type="button"
@@ -219,7 +233,28 @@ export default function AlreadyEnrolledCard({
           </svg>
         </button>
       )}
-
+      {isCompleted && !showCongrats && !ratingSubmitted && !ratingDismissed && (
+        <div className="relative mt-[39px] bg-white w-[473px] h-[172px] flex flex-col items-center rounded-[8px]">
+          <button
+            type="button"
+            onClick={() => setRatingDismissed(true)}
+            className="absolute top-[10px] right-[10px] cursor-pointer"
+          >
+            <CloseIcon />
+          </button>
+          <p className="font-medium text-base leading-6 h-[24px] flex items-center mt-[40px] tracking-normal text-center text-[#525252]">
+            Rate your experience
+          </p>
+          <StarRating
+            rating={rating}
+            hoverRating={hoverRating}
+            ratingSubmitted={ratingSubmitted}
+            size="lg"
+            onRate={handlePageRate}
+            onHover={setHoverRating}
+          />
+        </div>
+      )}
       {showCongrats && (
         <CongratsModal
           courseTitle={courseTitle}
