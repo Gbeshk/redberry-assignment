@@ -19,7 +19,7 @@ interface ProfileFormFieldsProps {
 }
 
 const ERROR_TEXT =
-  "mt-[4px] text-[12px] font-normal leading-normal tracking-[0%] text-[#F4161A]";
+  "mt-[4px] text-[10px] font-normal leading-none tracking-[0%] text-[#F4161A] whitespace-nowrap";
 const INPUT_BASE =
   "w-full border-[1.5px] h-[48px] rounded-[8px] p-[12px] pr-[40px] text-[14px] font-medium leading-[100%] tracking-[0%] caret-[#8A8A8A] placeholder:text-[#8A8A8A] placeholder:font-medium hover:placeholder:text-[#D1D1D1] focus:placeholder:text-[#F5F5F5] focus:outline-none focus:ring-0 transition-colors duration-200";
 
@@ -122,7 +122,7 @@ export default function ProfileFormFields({
                 if (errors.age) clearError("age");
               }}
               onBlur={() => { onAgeOpenChange(false); onBlurField("age"); }}
-              className="w-full border-[1.5px] border-[#D1D1D1] hover:border-[#ADADAD] focus:border-[#8A8A8A] rounded-[8px] h-[48px] pl-[12px] pr-[36px] text-[14px] font-medium leading-[100%] tracking-[0%] text-[#8A8A8A] focus:outline-none focus:ring-0 appearance-none bg-white cursor-pointer transition-colors duration-200"
+              className={`w-full border-[1.5px] rounded-[8px] h-[48px] pl-[12px] pr-[36px] text-[14px] font-medium leading-[100%] tracking-[0%] focus:outline-none focus:ring-0 appearance-none bg-white cursor-pointer transition-colors duration-200 ${errors.age ? "border-[#F4161A] text-[#F4161A]" : "border-[#D1D1D1] hover:border-[#ADADAD] focus:border-[#8A8A8A] text-[#8A8A8A]"}`}
             >
               <option value="" disabled>
                 Age

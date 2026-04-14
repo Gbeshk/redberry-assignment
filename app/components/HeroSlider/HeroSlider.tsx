@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import SwiperPic1 from "../../../public/images/swiperpic1.png";
 import SwiperPic2 from "../../../public/images/swiperpic2.png";
 import SwiperPic3 from "../../../public/images/swiperpic3.png";
@@ -34,8 +34,22 @@ function HeroSlider() {
   const bgPositions = ["center", "center -170px", "center -72px"];
 
   const [current, setCurrent] = useState(0);
-  const prev = () => setCurrent((c) => Math.max(c - 1, 0));
-  const next = () => setCurrent((c) => Math.min(c + 1, slides.length - 1));
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const resetTimer = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setCurrent((c) => (c + 1) % slides.length);
+    }, 4000);
+  };
+
+  useEffect(() => {
+    resetTimer();
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, []);
+
+  const prev = () => { setCurrent((c) => (c - 1 + slides.length) % slides.length); resetTimer(); };
+  const next = () => { setCurrent((c) => (c + 1) % slides.length); resetTimer(); };
   const router = useRouter();
 
   return (
@@ -82,7 +96,7 @@ function HeroSlider() {
                     {slides.map((_, i) => (
                       <div
                         key={i}
-                        onClick={() => setCurrent(i)}
+                        onClick={() => { setCurrent(i); resetTimer(); }}
                         className="w-[57px] h-[8px] rounded-[999px] cursor-pointer transition-colors duration-300"
                         style={{
                           backgroundColor:

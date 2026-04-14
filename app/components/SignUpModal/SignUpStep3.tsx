@@ -18,7 +18,6 @@ interface SignUpStep3Props {
   isSubmitting: boolean;
   onUsernameChange: (v: string) => void;
   onAvatarChange: (file: File) => void;
-  onAvatarRemove: () => void;
   onSubmit: () => void;
   onSignInClick: () => void;
 }
@@ -33,7 +32,6 @@ export default function SignUpStep3({
   isSubmitting,
   onUsernameChange,
   onAvatarChange,
-  onAvatarRemove,
   onSubmit,
   onSignInClick,
 }: SignUpStep3Props) {
@@ -63,7 +61,6 @@ export default function SignUpStep3({
         avatarPreview={avatarPreview}
         avatarError={avatarError}
         onFileChange={onAvatarChange}
-        onRemove={onAvatarRemove}
       />
 
       {submitError && <ErrorMessage msg={submitError} />}

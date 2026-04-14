@@ -5,12 +5,14 @@ import { formatFileSize } from "@/app/utils/formatFileSize";
 interface AvatarUploadBoxProps {
   avatarFile: File | null;
   avatarPreview: string | null;
+  avatarError: string;
   onFileChange: (file: File) => void;
 }
 
 export default function AvatarUploadBox({
   avatarFile,
   avatarPreview,
+  avatarError,
   onFileChange,
 }: AvatarUploadBoxProps) {
   const triggerInput = () =>
@@ -24,9 +26,11 @@ export default function AvatarUploadBox({
       <div
         onClick={triggerInput}
         className={`avatar-upload-box mt-[8px] rounded-[8px] flex items-center justify-center cursor-pointer overflow-hidden transition-all duration-200
-          ${hasPreview
-            ? "border-[1.5px] border-[#DDDBFA] bg-[#EEEDFC]"
-            : "border-[1.5px] border-[#D1D1D1] bg-transparent hover:border-[#B7B3F4] hover:bg-[#EEEDFC]"
+          ${avatarError
+            ? "border-[1.5px] border-[#F4161A] bg-[#EEEDFC]"
+            : hasPreview
+              ? "border-[1.5px] border-[#DDDBFA] bg-[#EEEDFC]"
+              : "border-[1.5px] border-[#D1D1D1] bg-transparent hover:border-[#B7B3F4] hover:bg-[#EEEDFC]"
           }`}
         style={{ width: "360px", height: "140px" }}
       >
@@ -77,7 +81,6 @@ export default function AvatarUploadBox({
         <input
           type="file"
           id="profileAvatarInput"
-          accept=".jpg,.jpeg,.png,.webp"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -86,6 +89,11 @@ export default function AvatarUploadBox({
           }}
         />
       </div>
+      {avatarError && (
+        <p className="mt-[4px] text-[10px] font-normal leading-none text-[#F4161A]">
+          {avatarError}
+        </p>
+      )}
     </div>
   );
 }

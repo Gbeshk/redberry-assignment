@@ -86,20 +86,38 @@ export default function SignUpModal({
 
   const handleAvatarChange = (file: File) => {
     const allowed = ["image/jpeg", "image/png", "image/webp"];
-    setAvatar(file);
-    setAvatarPreview(URL.createObjectURL(file));
     if (!allowed.includes(file.type)) {
       setAvatarError("Only JPG, PNG, or WebP files are allowed.");
-    } else {
-      setAvatarError("");
+      setAvatar(file);
+      setAvatarPreview(URL.createObjectURL(file));
+      return;
     }
+    setAvatarError("");
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const MAX = 800;
+      const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return;
+          const compressed = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
+          setAvatar(compressed);
+          setAvatarPreview(URL.createObjectURL(compressed));
+        },
+        "image/jpeg",
+        0.8,
+      );
+    };
+    img.src = objectUrl;
   };
 
-  const handleAvatarRemove = () => {
-    setAvatar(null);
-    setAvatarPreview(null);
-    setAvatarError("");
-  };
+
 
   const handleSignUp = async () => {
     if (!username.trim()) return setUsernameError("Username is required.");
@@ -275,7 +293,6 @@ export default function SignUpModal({
                 if (usernameError) setUsernameError("");
               }}
               onAvatarChange={handleAvatarChange}
-              onAvatarRemove={handleAvatarRemove}
               onSubmit={handleSignUp}
               onSignInClick={() => {
                 handleClose();

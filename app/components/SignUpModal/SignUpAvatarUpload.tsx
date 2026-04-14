@@ -8,7 +8,6 @@ interface SignUpAvatarUploadProps {
   avatarPreview: string | null;
   avatarError: string;
   onFileChange: (file: File) => void;
-  onRemove: () => void;
 }
 
 export default function SignUpAvatarUpload({
@@ -16,7 +15,6 @@ export default function SignUpAvatarUpload({
   avatarPreview,
   avatarError,
   onFileChange,
-  onRemove,
 }: SignUpAvatarUploadProps) {
   const hasAvatar = !!(avatarPreview && avatar);
   const triggerInput = () => document.getElementById("avatarInput")?.click();
@@ -53,26 +51,15 @@ export default function SignUpAvatarUpload({
               <p className="text-[#ADADAD] font-normal text-[10px] leading-none tracking-normal h-[12px] flex items-center">
                 Size — {formatFileSize(avatar!.size)}
               </p>
-              <div className="flex items-center gap-[8px] mt-[2px]">
-                <p
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    triggerInput();
-                  }}
-                  className="h-[12px] flex items-center text-[#4F46E5] font-medium text-[10px] leading-none tracking-normal underline decoration-solid underline-offset-[25%] decoration-[0px]"
-                >
-                  Change
-                </p>
-                <p
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemove();
-                  }}
-                  className="h-[12px] flex items-center text-[#F4161A] font-medium text-[10px] leading-none tracking-normal underline decoration-solid underline-offset-[25%] decoration-[0px]"
-                >
-                  Remove
-                </p>
-              </div>
+              <p
+                onClick={(e) => {
+                  e.stopPropagation();
+                  triggerInput();
+                }}
+                className="h-[12px] flex items-center mt-[2px] text-[#4F46E5] font-medium text-[10px] leading-none tracking-normal underline decoration-solid underline-offset-[25%] decoration-[0px]"
+              >
+                Change
+              </p>
             </div>
           </div>
         ) : (

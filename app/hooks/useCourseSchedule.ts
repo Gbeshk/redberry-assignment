@@ -157,7 +157,6 @@ export function useCourseSchedule(courseId: string, onSignInClick: () => void) {
     };
   }, []);
 
-  // --- Fetch weekly schedules ---
   useEffect(() => {
     fetch(`${BASE}/courses/${courseId}/weekly-schedules`)
       .then((r) => r.json())
@@ -165,7 +164,6 @@ export function useCourseSchedule(courseId: string, onSignInClick: () => void) {
       .catch(() => {});
   }, [courseId]);
 
-  // --- Fetch time slots when schedule selected ---
   useEffect(() => {
     if (selectedScheduleId === null) {
       setTimeSlots([]);
