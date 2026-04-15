@@ -87,7 +87,7 @@ export default function ProfileFormFields({
             className={`group relative mt-[8px] flex items-center border-[1.5px] rounded-[8px] h-[48px] overflow-hidden transition-colors duration-200 ${errors.mobile ? "border-[#F4161A]" : "border-[#D1D1D1] hover:border-[#ADADAD] focus-within:border-[#8A8A8A]"}`}
           >
             <span
-              className={`pl-[12px] pr-[4px] text-[14px] font-medium h-full flex items-center shrink-0 transition-colors duration-200 ${errors.mobile ? "text-[#F4161A]" : "text-[#8A8A8A] group-hover:text-[#ADADAD] group-focus-within:text-[#525252]"}`}
+              className={`pl-[12px] pr-[4px] text-[14px] font-medium shrink-0 leading-none transition-colors duration-200 ${errors.mobile ? "text-[#F4161A]" : "text-[#8A8A8A] group-hover:text-[#ADADAD] group-focus-within:text-[#525252]"}`}
             >
               +995
             </span>
@@ -100,7 +100,7 @@ export default function ProfileFormFields({
                 if (errors.mobile) clearError("mobile");
               }}
               onBlur={() => onBlurField("mobile")}
-              className={`flex-1 h-full pr-[40px] text-[14px] font-medium leading-[100%] tracking-[0%] caret-[#8A8A8A] placeholder:text-[#8A8A8A] placeholder:font-medium hover:placeholder:text-[#D1D1D1] focus:placeholder:text-[#F5F5F5] focus:outline-none focus:ring-0 ${errors.mobile ? "text-[#F4161A]" : "text-[#3D3D3D]"}`}
+              className={`flex-1 h-full pr-[40px] text-[14px] font-medium leading-none tracking-[0%] caret-[#8A8A8A] placeholder:text-[#8A8A8A] placeholder:font-medium hover:placeholder:text-[#D1D1D1] focus:placeholder:text-[#F5F5F5] focus:outline-none focus:ring-0 ${errors.mobile ? "text-[#F4161A]" : "text-[#3D3D3D]"}`}
             />
             <div className="absolute right-[12px] top-1/2 -translate-y-1/2">
               <EditNameIcon />

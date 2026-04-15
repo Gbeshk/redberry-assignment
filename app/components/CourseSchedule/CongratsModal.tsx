@@ -47,43 +47,37 @@ export default function CongratsModal({
           {" Course!"}
         </p>
 
-        {ratingSubmitted ? (
-          <p className="mt-[40px] font-medium text-[16px] leading-[24px] tracking-[0] text-center text-[#736BEA]">
-            You've already rated this course
-          </p>
-        ) : (
-          <>
-            <p className="mt-[40px] font-medium text-[16px] leading-[24px] tracking-[0] text-center text-[#736BEA]">
-              Rate your experience
-            </p>
-            <div className="flex gap-[8px] mt-[16px]">
-              {[1, 2, 3, 4, 5].map((star) => {
-                const activeRating = hoverRating ?? rating;
-                const full = activeRating !== null ? star <= activeRating : star <= 2;
-                const half = activeRating === null && star === 3;
+        <p className="mt-[40px] font-medium text-[16px] leading-[24px] tracking-[0] text-center text-[#736BEA]">
+          {ratingSubmitted ? "You've already rated this course" : "Rate your experience"}
+        </p>
+        <div className="flex gap-[18px] mt-[16px]">
+          {[1, 2, 3, 4, 5].map((star) => {
+            const activeRating = hoverRating ?? rating;
+            const full = ratingSubmitted
+              ? rating !== null && star <= rating
+              : activeRating !== null ? star <= activeRating : star <= 2;
+            const half = !ratingSubmitted && activeRating === null && star === 3;
 
-                return (
-                  <button
-                    key={star}
-                    type="button"
-                    className="transition-transform duration-150 cursor-pointer hover:scale-110 focus-visible:outline-none"
-                    onClick={() => onRate(star)}
-                    onMouseEnter={() => !ratingSubmitted && onHover(star)}
-                    onMouseLeave={() => !ratingSubmitted && onHover(null)}
-                  >
-                    {full ? (
-                      <StarFull />
-                    ) : half ? (
-                      <StarHalf />
-                    ) : (
-                      <StarEmpty id={`congrats-${star}`} />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </>
-        )}
+            return (
+              <button
+                key={star}
+                type="button"
+                className={`transition-transform duration-150 focus-visible:outline-none ${ratingSubmitted ? "cursor-default" : "cursor-pointer hover:scale-110"}`}
+                onClick={() => !ratingSubmitted && onRate(star)}
+                onMouseEnter={() => !ratingSubmitted && onHover(star)}
+                onMouseLeave={() => !ratingSubmitted && onHover(null)}
+              >
+                {full ? (
+                  <StarFull />
+                ) : half ? (
+                  <StarHalf />
+                ) : (
+                  <StarEmpty id={`congrats-${star}`} chosen={rating !== null} />
+                )}
+              </button>
+            );
+          })}
+        </div>
 
         <button
           type="button"

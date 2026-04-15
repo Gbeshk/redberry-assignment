@@ -3,7 +3,7 @@ import CourseCard from "./CourseCard";
 import SortDropdown from "./SortDropdown";
 import Pagination from "./Pagination";
 import { useCoursesList } from "@/app/hooks/useCoursesList";
-import Spinner from "@/app/components/ui/Spinner";
+import CourseCardSkeleton from "./CourseCardSkeleton";
 
 interface CoursesListProps {
   selectedCategories: number[];
@@ -42,9 +42,7 @@ export default function CoursesList({
 
       <div className="w-full mt-[32px] flex flex-wrap gap-[24px] min-h-[400px]">
         {loading ? (
-          <div className="flex items-center justify-center w-full">
-            <Spinner size={48} />
-          </div>
+          Array.from({ length: 9 }).map((_, i) => <CourseCardSkeleton key={i} />)
         ) : (
           pagedCourses.map((course) => (
             <CourseCard key={course.id} course={course} />

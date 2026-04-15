@@ -65,7 +65,7 @@ export default function CourseDetailHero({ course }: CourseDetailHeroProps) {
       </div>
 
       {course.instructor && (
-        <div className="px-[12px] bg-white py-[8px] rounded-[12px] w-fit mt-[18px] flex items-center gap-[12px] cursor-pointer">
+        <div className="px-[12px] bg-white py-[8px] rounded-[12px] w-fit mt-[18px] flex items-center gap-[12px] ">
           {course.instructor.avatar && (
             <Image
               src={course.instructor.avatar}

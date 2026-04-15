@@ -1,8 +1,8 @@
-export default function StarFull() {
+export default function StarFull({ size = 46 }: { size?: number }) {
   return (
     <svg
-      width="46"
-      height="46"
+      width={size}
+      height={size}
       viewBox="0 0 46 46"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

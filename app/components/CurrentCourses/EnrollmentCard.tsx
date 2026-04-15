@@ -4,15 +4,13 @@ import StarIcon from "@/app/components/icons/StarIcon";
 import def_img from "@/public/images/default-course-img.png";
 import { Enrollment } from "@/app/hooks/useCurrentCourses";
 
-const BLUR_CLASSES = ["blur-[20px]", "blur-[20px]", "blur-[10px]"];
 
 interface EnrollmentCardProps {
   enrollment: Enrollment | null;
-  index: number;
   isLoggedIn: boolean;
 }
 
-export default function EnrollmentCard({ enrollment, index, isLoggedIn }: EnrollmentCardProps) {
+export default function EnrollmentCard({ enrollment, isLoggedIn }: EnrollmentCardProps) {
   const router = useRouter();
 
   const progress = enrollment?.progress ?? 65;
@@ -20,7 +18,7 @@ export default function EnrollmentCard({ enrollment, index, isLoggedIn }: Enroll
   const instructor = enrollment?.course.instructor.name ?? "Marilyn Mango";
   const rating = enrollment?.course.avgRating
     ? Math.round(enrollment.course.avgRating * 10) / 10
-    : null;
+    : enrollment === null ? 4.9 : null;
   const image: string | StaticImageData = enrollment?.course.image ?? def_img;
   const progressWidth = (336 * progress) / 100;
 
@@ -31,10 +29,10 @@ export default function EnrollmentCard({ enrollment, index, isLoggedIn }: Enroll
   return (
     <div
       onClick={handleNavigate}
-      tabIndex={enrollment ? 0 : -1}
+      tabIndex={enrollment && isLoggedIn ? 0 : -1}
       className={`w-[506px] h-full bg-white rounded-[12px] p-[20px] border-[1px] transition-all ease-out duration-300
-        ${!isLoggedIn ? BLUR_CLASSES[index] : ""}
-        ${enrollment
+        ${!isLoggedIn ? "blur-[10px] pointer-events-none" : ""}
+        ${enrollment && isLoggedIn
           ? "border-[#F5F5F5] cursor-pointer hover:border-[#B7B3F4] hover:shadow-[0px_0px_15px_0px_rgba(138,130,212,0.2)] focus:border-[#958FEF] focus:shadow-[0px_0px_45px_0px_rgba(138,130,212,0.15)] focus:outline-none"
           : "border-[#F5F5F5]"
         }`}

@@ -23,7 +23,7 @@ export default function CoursesPage() {
       <div className="flex items-center">
         <p
           onClick={() => router.push("/")}
-          className="text-[#666666] cursor-pointer font-medium text-[18px] leading-[100%] tracking-[0%] h-[22px] flex items-center w-[51px] justify-center"
+          className="text-[#666666] hover:text-[#4F46E5] transition-colors duration-200 cursor-pointer font-medium text-[18px] leading-[100%] tracking-[0%] h-[22px] flex items-center w-[51px] justify-center"
         >
           Home
         </p>

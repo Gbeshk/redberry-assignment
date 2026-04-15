@@ -47,7 +47,6 @@ export default function CurrentCourses({
               <EnrollmentCard
                 key={i}
                 enrollment={enrollment}
-                index={i}
                 isLoggedIn={isLoggedIn}
               />
             ))}

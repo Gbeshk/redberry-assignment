@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CloseSvg from "../icons/CloseSvg";
 import GoBackSvg from "../icons/GoBackSvg";
 import ProgressBars from "./ProgressBars";
@@ -188,6 +188,12 @@ export default function SignUpModal({
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") handleClose(); };
+    if (isOpen) document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

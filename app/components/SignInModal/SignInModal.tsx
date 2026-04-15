@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 import CloseIcon from "@/app/components/icons/CloseIcon";
 import EyeOpenIcon from "@/app/components/icons/EyeOpenIcon";
 import EyeClosedIcon from "@/app/components/icons/EyeClosedIcon";
@@ -48,6 +49,12 @@ export default function SignInModal({
   onSuccess,
 }: SignInModalProps) {
   const s = useSignInModal(onClose, onSuccess);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") s.handleClose(); };
+    if (isOpen) document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

@@ -20,7 +20,7 @@ export default function StarRating({
   onHover,
 }: StarRatingProps) {
   return (
-    <div className="flex gap-[8px] mt-[18px]">
+    <div className={`flex mt-[18px] ${size === "lg" ? "gap-[18px]" : "gap-[8px]"}`}>
       {[1, 2, 3, 4, 5].map((star) => {
         const active = hoverRating ?? rating ?? 0;
         const filled = star <= active;
@@ -55,11 +55,11 @@ export default function StarRating({
           : activeRating !== null ? star <= activeRating : star <= 2;
         const lgHalf = !ratingSubmitted && activeRating === null && star === 3;
         const lgStar = lgFull ? (
-          <StarFull />
+          <StarFull size={50} />
         ) : lgHalf ? (
-          <StarHalf />
+          <StarHalf size={50} />
         ) : (
-          <StarEmpty id={`modal-${star}`} />
+          <StarEmpty id={`modal-${star}`} chosen={rating !== null} size={50} />
         );
 
         return (
