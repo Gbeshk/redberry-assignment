@@ -119,7 +119,6 @@ export default function ProfileFormFields({
               onChange={(e) => {
                 onAgeChange(e.target.value);
                 onAgeOpenChange(false);
-                if (errors.age) clearError("age");
               }}
               onBlur={() => { onAgeOpenChange(false); onBlurField("age"); }}
               className={`w-full border-[1.5px] rounded-[8px] h-[48px] pl-[12px] pr-[36px] text-[14px] font-medium leading-[100%] tracking-[0%] focus:outline-none focus:ring-0 appearance-none bg-white cursor-pointer transition-colors duration-200 ${errors.age ? "border-[#F4161A] text-[#F4161A]" : "border-[#D1D1D1] hover:border-[#ADADAD] focus:border-[#8A8A8A] text-[#8A8A8A]"}`}
@@ -127,7 +126,7 @@ export default function ProfileFormFields({
               <option value="" disabled>
                 Age
               </option>
-              {Array.from({ length: 105 }, (_, i) => i + 16).map((n) => (
+              {Array.from({ length: 85 }, (_, i) => i + 16).map((n) => (
                 <option key={n} value={n}>
                   {n}
                 </option>

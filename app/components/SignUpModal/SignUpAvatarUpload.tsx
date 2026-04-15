@@ -21,7 +21,7 @@ export default function SignUpAvatarUpload({
 
   return (
     <div className="flex flex-col w-full">
-      <label className="mt-[24px] text-sm font-medium">Upload Avatar</label>
+      <label className={`mt-[24px] text-sm font-medium ${avatarError ? "text-[#F4161A]" : ""}`}>Upload Avatar</label>
       <div
         className={`avatar-upload-box mt-[8px] rounded-[8px] flex items-center justify-center cursor-pointer overflow-hidden transition-all duration-200
           ${avatarError

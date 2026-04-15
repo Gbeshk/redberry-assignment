@@ -21,6 +21,7 @@ interface HeaderProps {
   onSignUpClick: () => void;
   onProfileClick: () => void;
   onEnrolledCoursesClick: () => void;
+  onLogoutClick: () => void;
 }
 
 export default function Header({
@@ -31,6 +32,7 @@ export default function Header({
   onSignUpClick,
   onProfileClick,
   onEnrolledCoursesClick,
+  onLogoutClick,
 }: HeaderProps) {
   const router = useRouter();
 
@@ -38,7 +40,6 @@ export default function Header({
     <div className="flex w-full items-center h-[108px] border-b-[#D1D1D1] border-b-[1px]">
       <div className="w-[1566px] h-[60px] mx-auto my-[24px] flex justify-between items-center">
 
-        {/* Logo */}
         <button
           type="button"
           onClick={() => router.push("/")}
@@ -47,7 +48,6 @@ export default function Header({
           <Image src={Logo} width={29} height={30} alt="logo" className="w-[29px] h-[30px]" />
         </button>
 
-        {/* Nav */}
         <div className="flex items-center min-w-[510px] shrink-0">
           <div
             onClick={() => router.push("/courses")}
@@ -67,31 +67,41 @@ export default function Header({
                 <p className={NAV_TEXT_BASE}>Enrolled Courses</p>
               </div>
 
-              {/* Avatar */}
-              <div
-                className="relative ml-[36px] cursor-pointer group"
-                onClick={onProfileClick}
-              >
+              {/* Avatar + hover logout */}
+              <div className="relative ml-[36px] group">
                 <div
-                  className="w-[56px] h-[56px] rounded-full flex items-center justify-center overflow-hidden transition-all duration-300 ease-out group-hover:ring-[1.5px] group-hover:ring-[#B7B3F4]"
-                  style={{ backgroundColor: "#EEEDFC" }}
+                  className="relative cursor-pointer"
+                  onClick={onProfileClick}
                 >
-                  {userData?.avatar ? (
-                    <Image
-                      src={userData.avatar}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                      width={56}
-                      height={56}
-                    />
-                  ) : (
-                    <ProfileSvg />
-                  )}
+                  <div
+                    className="w-[56px] h-[56px] rounded-full flex items-center justify-center overflow-hidden transition-all duration-300 ease-out group-hover:ring-[1.5px] group-hover:ring-[#B7B3F4]"
+                    style={{ backgroundColor: "#EEEDFC" }}
+                  >
+                    {userData?.avatar ? (
+                      <Image
+                        src={userData.avatar}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                        width={56}
+                        height={56}
+                      />
+                    ) : (
+                      <ProfileSvg />
+                    )}
+                  </div>
+                  <div
+                    className="absolute bottom-0 right-0 w-[15px] h-[15px] rounded-full border-[2px] border-white"
+                    style={{ backgroundColor: profileCompleted ? "#1DC31D" : "#F4A316" }}
+                  />
                 </div>
-                <div
-                  className="absolute bottom-0 right-0 w-[15px] h-[15px] rounded-full border-[2px] border-white"
-                  style={{ backgroundColor: profileCompleted ? "#1DC31D" : "#F4A316" }}
-                />
+
+                <button
+                  type="button"
+                  onClick={onLogoutClick}
+                  className="absolute top-[64px] right-0 whitespace-nowrap px-[14px] py-[7px] rounded-[8px] bg-white border border-[#E5E5E5] shadow-[0_4px_16px_rgba(0,0,0,0.10)] text-[14px] font-medium text-[#E53E3E] opacity-0 group-hover:opacity-100 transition-opacity duration-150 cursor-pointer z-50"
+                >
+                  Log Out
+                </button>
               </div>
             </>
           ) : (

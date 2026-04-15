@@ -65,7 +65,7 @@ export function useProfileModal(
     if (!fullName.trim() || fullName.trim().length < 3 || fullName.trim().length > 50) return false;
     const digits = mobileNumber.replace(/\s/g, "");
     if (!digits || !digits.startsWith("5") || digits.length !== 9) return false;
-    if (!age || Number(age) < 16 || Number(age) > 120) return false;
+    if (!age || Number(age) < 16 || Number(age) > 100) return false;
     return true;
   })();
 
@@ -90,7 +90,7 @@ export function useProfileModal(
     if (field === "age") {
       if (!age) next.age = "Age is required";
       else if (Number(age) < 16) next.age = "You must be at least 16 years old to enroll";
-      else if (Number(age) > 120) next.age = "Please enter a valid age";
+      else if (Number(age) > 100) next.age = "Please enter a valid age";
       else next.age = "";
     }
 
@@ -130,7 +130,7 @@ export function useProfileModal(
     } else if (Number(age) < 16) {
       next.age = "You must be at least 16 years old to enroll";
       valid = false;
-    } else if (Number(age) > 120) {
+    } else if (Number(age) > 100) {
       next.age = "Please enter a valid age";
       valid = false;
     }
@@ -194,6 +194,12 @@ export function useProfileModal(
   };
 
   const handleAvatarChange = (file: File) => {
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarError("Image must be smaller than 2MB.");
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+      return;
+    }
     const allowed = ["image/jpeg", "image/png", "image/webp"];
     if (!allowed.includes(file.type)) {
       setAvatarError("Only JPG, PNG, or WebP files are allowed.");
@@ -226,6 +232,15 @@ export function useProfileModal(
     img.src = objectUrl;
   };
 
+  const handleAgeChange = (value: string) => {
+    setAge(value);
+    let msg = "";
+    if (!value) msg = "Age is required";
+    else if (Number(value) < 16) msg = "You must be at least 16 years old to enroll";
+    else if (Number(value) > 100) msg = "Please enter a valid age";
+    setErrors((prev) => ({ ...prev, age: msg }));
+  };
+
   const clearError = (field: keyof ProfileFormErrors) =>
     setErrors((prev) => ({ ...prev, [field]: "" }));
 
@@ -251,6 +266,7 @@ export function useProfileModal(
     isFormValid,
     clearError,
     validateField,
+    handleAgeChange,
     handleUpdate,
     handleAvatarChange,
   };

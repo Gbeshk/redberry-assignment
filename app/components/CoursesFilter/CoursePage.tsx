@@ -1,22 +1,65 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import CoursesList from "@/app/components/CoursesList/CoursesList";
 import ArrowNavigation from "@/app/components/icons/ArrowNavigation";
 import CoursesFilterPanel from "@/app/components/CoursesFilter/CoursesFilterPanel";
-import { useFilters } from "@/app/hooks/useFilters";
+import { SortOption } from "@/app/hooks/useCoursesList";
 
-export default function CoursesPage() {
+function CoursesPageInner() {
   const router = useRouter();
-  const {
-    selectedCategories,
-    selectedTopics,
-    selectedInstructors,
-    toggleCategory,
-    toggleTopic,
-    toggleInstructor,
-    clearAllFilters,
-    totalActiveFilters,
-  } = useFilters();
+  const searchParams = useSearchParams();
+
+  const selectedCategories = searchParams.getAll("categories").map(Number).filter(Boolean);
+  const selectedTopics = searchParams.getAll("topics").map(Number).filter(Boolean);
+  const selectedInstructors = searchParams.getAll("instructors").map(Number).filter(Boolean);
+  const sortBy = (searchParams.get("sort") ?? "newest") as SortOption;
+  const currentPage = Number(searchParams.get("page") ?? "1");
+
+  const updateURL = (updates: {
+    categories?: number[];
+    topics?: number[];
+    instructors?: number[];
+    sort?: string;
+    page?: number;
+  }) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if ("categories" in updates) {
+      params.delete("categories");
+      updates.categories!.forEach((id) => params.append("categories", String(id)));
+    }
+    if ("topics" in updates) {
+      params.delete("topics");
+      updates.topics!.forEach((id) => params.append("topics", String(id)));
+    }
+    if ("instructors" in updates) {
+      params.delete("instructors");
+      updates.instructors!.forEach((id) => params.append("instructors", String(id)));
+    }
+    if ("sort" in updates) {
+      updates.sort !== "newest" ? params.set("sort", updates.sort!) : params.delete("sort");
+    }
+    if ("page" in updates) {
+      updates.page !== 1 ? params.set("page", String(updates.page)) : params.delete("page");
+    }
+
+    router.push(`/courses?${params.toString()}`, { scroll: false });
+  };
+
+  const toggle = (
+    key: "categories" | "topics" | "instructors",
+    current: number[],
+    id: number,
+  ) => {
+    const next = current.includes(id)
+      ? current.filter((x) => x !== id)
+      : [...current, id];
+    updateURL({ [key]: next, page: 1 });
+  };
+
+  const totalActiveFilters =
+    selectedCategories.length + selectedTopics.length + selectedInstructors.length;
 
   return (
     <div className="w-[1566px] mx-auto mt-[64px]">
@@ -39,17 +82,29 @@ export default function CoursesPage() {
           selectedTopics={selectedTopics}
           selectedInstructors={selectedInstructors}
           totalActiveFilters={totalActiveFilters}
-          onToggleCategory={toggleCategory}
-          onToggleTopic={toggleTopic}
-          onToggleInstructor={toggleInstructor}
-          onClearAll={clearAllFilters}
+          onToggleCategory={(id) => toggle("categories", selectedCategories, id)}
+          onToggleTopic={(id) => toggle("topics", selectedTopics, id)}
+          onToggleInstructor={(id) => toggle("instructors", selectedInstructors, id)}
+          onClearAll={() => updateURL({ categories: [], topics: [], instructors: [], page: 1 })}
         />
         <CoursesList
           selectedCategories={selectedCategories}
           selectedTopics={selectedTopics}
           selectedInstructors={selectedInstructors}
+          sortBy={sortBy}
+          currentPage={currentPage}
+          onSortChange={(sort) => updateURL({ sort, page: 1 })}
+          onPageChange={(page) => updateURL({ page })}
         />
       </div>
     </div>
+  );
+}
+
+export default function CoursesPage() {
+  return (
+    <Suspense>
+      <CoursesPageInner />
+    </Suspense>
   );
 }

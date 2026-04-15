@@ -22,6 +22,26 @@ export default function ClientLayout({
   } | null>(null);
   const [showEnrolledDrawer, setShowEnrolledDrawer] = useState(false);
 
+  const handleLogout = async () => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      try {
+        await fetch("https://api.redclass.redberryinternship.ge/api/logout", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "*/*",
+          },
+        });
+      } catch (e) {}
+    }
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userData");
+    setIsLoggedIn(false);
+    setUserData(null);
+    window.dispatchEvent(new Event("auth-updated-logout"));
+  };
+
   const refreshUser = async () => {
     try {
       const token = localStorage.getItem("authToken");
@@ -109,6 +129,7 @@ export default function ClientLayout({
         onSignUpClick={() => setShowSignUpModal(true)}
         onProfileClick={() => setShowProfileModal(true)}
         onEnrolledCoursesClick={() => setShowEnrolledDrawer(true)}
+        onLogoutClick={handleLogout}
         profileCompleted={userData?.profileComplete}
       />
       <EnrolledCoursesDrawer

@@ -85,6 +85,12 @@ export default function SignUpModal({
   };
 
   const handleAvatarChange = (file: File) => {
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarError("Image must be smaller than 2MB.");
+      setAvatar(file);
+      setAvatarPreview(URL.createObjectURL(file));
+      return;
+    }
     const allowed = ["image/jpeg", "image/png", "image/webp"];
     if (!allowed.includes(file.type)) {
       setAvatarError("Only JPG, PNG, or WebP files are allowed.");

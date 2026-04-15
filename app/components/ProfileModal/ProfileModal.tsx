@@ -67,7 +67,7 @@ export default function ProfileModal({
             errors={s.errors}
             onFullNameChange={s.setFullName}
             onMobileChange={s.setMobileNumber}
-            onAgeChange={s.setAge}
+            onAgeChange={s.handleAgeChange}
             onAgeOpenChange={s.setIsAgeOpen}
             clearError={s.clearError}
             onBlurField={s.validateField}

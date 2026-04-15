@@ -30,97 +30,84 @@ export const SORT_LABELS: Record<SortOption, string> = {
   title_az: "Title: A-Z",
 };
 
-const COURSES_PER_PAGE = 9;
+const API_SORT: Record<SortOption, string> = {
+  newest: "newest",
+  price_asc: "price_asc",
+  price_desc: "price_desc",
+  popular: "popular",
+  title_az: "title_asc",
+};
+
+const UI_PAGE_SIZE = 9;
+const API_PAGE_SIZE = 10;
 const BASE = "https://api.redclass.redberryinternship.ge/api";
 
 interface UseCoursesListParams {
   selectedCategories: number[];
   selectedTopics: number[];
   selectedInstructors: number[];
+  sortBy: SortOption;
+  currentPage: number;
 }
 
 export function useCoursesList({
   selectedCategories,
   selectedTopics,
   selectedInstructors,
+  sortBy,
+  currentPage,
 }: UseCoursesListParams) {
-  const [allCourses, setAllCourses] = useState<Course[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAll = async () => {
-      setLoading(true);
-      let page = 1;
-      let collected: Course[] = [];
-      let hasMore = true;
-      while (hasMore) {
-        const res = await fetch(`${BASE}/courses?page=${page}`);
-        const data = await res.json();
-        const items: Course[] = data.data ?? data.courses ?? data;
-        collected = [...collected, ...items];
-        const total = data.total ?? data.meta?.total ?? 0;
-        hasMore = collected.length < total && items.length > 0;
-        page++;
-      }
-      setAllCourses(collected);
-      setLoading(false);
+    const controller = new AbortController();
+    setLoading(true);
+
+    // UI page N shows items at 0-based indices: (N-1)*9 … N*9-1
+    const firstIdx = (currentPage - 1) * UI_PAGE_SIZE;
+    const lastIdx = currentPage * UI_PAGE_SIZE - 1;
+
+    // Which API pages (1-based) contain those indices?
+    const firstApiPage = Math.floor(firstIdx / API_PAGE_SIZE) + 1;
+    const lastApiPage = Math.floor(lastIdx / API_PAGE_SIZE) + 1;
+
+    const buildParams = (apiPage: number) => {
+      const p = new URLSearchParams();
+      p.set("sort", API_SORT[sortBy]);
+      p.set("page", String(apiPage));
+      selectedCategories.forEach((id) => p.append("categories[]", String(id)));
+      selectedTopics.forEach((id) => p.append("topics[]", String(id)));
+      selectedInstructors.forEach((id) => p.append("instructors[]", String(id)));
+      return p.toString();
     };
-    fetchAll();
-  }, []);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedCategories, selectedTopics, selectedInstructors]);
+    const pagesToFetch = Array.from(
+      { length: lastApiPage - firstApiPage + 1 },
+      (_, i) => firstApiPage + i,
+    );
 
-  const filteredCourses = allCourses.filter((course) => {
-    const categoryMatch =
-      selectedCategories.length === 0 ||
-      selectedCategories.includes(course.category.id);
-    const topicMatch =
-      selectedTopics.length === 0 || selectedTopics.includes(course.topic.id);
-    const instructorMatch =
-      selectedInstructors.length === 0 ||
-      selectedInstructors.includes(course.instructor.id);
-    return categoryMatch && topicMatch && instructorMatch;
-  });
+    Promise.all(
+      pagesToFetch.map((p) =>
+        fetch(`${BASE}/courses?${buildParams(p)}`, { signal: controller.signal }).then((r) => r.json()),
+      ),
+    )
+      .then((results) => {
+        const apiTotal: number = results[0]?.total ?? results[0]?.meta?.total ?? 0;
+        const combined: Course[] = results.flatMap((d) => d.data ?? []);
+        const offset = firstIdx - (firstApiPage - 1) * API_PAGE_SIZE;
 
-  const sortedCourses = [...filteredCourses].sort((a, b) => {
-    switch (sortBy) {
-      case "newest":
-        return a.id - b.id;
-      case "price_asc":
-        return parseFloat(a.basePrice) - parseFloat(b.basePrice);
-      case "price_desc":
-        return parseFloat(b.basePrice) - parseFloat(a.basePrice);
-      case "popular":
-        return (b.reviewCount ?? 0) - (a.reviewCount ?? 0);
-      case "title_az":
-        return a.title.localeCompare(b.title);
-      default:
-        return 0;
-    }
-  });
+        setCourses(combined.slice(offset, offset + UI_PAGE_SIZE));
+        setTotal(apiTotal);
+        setTotalPages(Math.ceil(apiTotal / UI_PAGE_SIZE));
+      })
+      .catch((err) => { if (err.name !== "AbortError") setCourses([]); })
+      .finally(() => setLoading(false));
 
-  const total = sortedCourses.length;
-  const totalPages = Math.ceil(total / COURSES_PER_PAGE);
-  const start = (currentPage - 1) * COURSES_PER_PAGE;
-  const pagedCourses = sortedCourses.slice(start, start + COURSES_PER_PAGE);
+    return () => controller.abort();
+  }, [sortBy, currentPage, selectedCategories, selectedTopics, selectedInstructors]);
 
-  const handleSortChange = (option: SortOption) => {
-    setSortBy(option);
-    setCurrentPage(1);
-  };
-
-  return {
-    pagedCourses,
-    total,
-    totalPages,
-    currentPage,
-    setCurrentPage,
-    sortBy,
-    handleSortChange,
-    loading,
-  };
+  return { pagedCourses: courses, total, totalPages, loading };
 }

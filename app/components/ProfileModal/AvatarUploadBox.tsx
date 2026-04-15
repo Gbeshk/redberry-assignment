@@ -22,7 +22,7 @@ export default function AvatarUploadBox({
 
   return (
     <div className="flex flex-col mt-[12px]">
-      <label className="text-sm font-medium">Upload Avatar</label>
+      <label className={`text-sm font-medium ${avatarError ? "text-[#F4161A]" : ""}`}>Upload Avatar</label>
       <div
         onClick={triggerInput}
         className={`avatar-upload-box mt-[8px] rounded-[8px] flex items-center justify-center cursor-pointer overflow-hidden transition-all duration-200

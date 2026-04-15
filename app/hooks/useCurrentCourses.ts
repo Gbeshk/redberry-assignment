@@ -61,13 +61,22 @@ export function useCurrentCourses() {
       .finally(() => setLoading(false));
   };
 
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setEnrollments([]);
+    setLoading(false);
+  };
+
   useEffect(() => {
     fetchEnrollments();
     window.addEventListener("auth-updated", fetchEnrollments);
-    return () => window.removeEventListener("auth-updated", fetchEnrollments);
+    window.addEventListener("auth-updated-logout", handleLogout);
+    return () => {
+      window.removeEventListener("auth-updated", fetchEnrollments);
+      window.removeEventListener("auth-updated-logout", handleLogout);
+    };
   }, []);
 
-  // Fill to always have 3 slots — null means placeholder
   const slots: (Enrollment | null)[] = isLoggedIn
     ? [...enrollments, ...Array(Math.max(0, 3 - enrollments.length)).fill(null)]
     : [null, null, null];

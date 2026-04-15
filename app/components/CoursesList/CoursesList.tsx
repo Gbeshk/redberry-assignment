@@ -2,33 +2,34 @@
 import CourseCard from "./CourseCard";
 import SortDropdown from "./SortDropdown";
 import Pagination from "./Pagination";
-import { useCoursesList } from "@/app/hooks/useCoursesList";
 import CourseCardSkeleton from "./CourseCardSkeleton";
+import { useCoursesList, SortOption } from "@/app/hooks/useCoursesList";
 
 interface CoursesListProps {
   selectedCategories: number[];
   selectedTopics: number[];
   selectedInstructors: number[];
+  sortBy: SortOption;
+  currentPage: number;
+  onSortChange: (sort: SortOption) => void;
+  onPageChange: (page: number) => void;
 }
 
 export default function CoursesList({
   selectedCategories,
   selectedTopics,
   selectedInstructors,
+  sortBy,
+  currentPage,
+  onSortChange,
+  onPageChange,
 }: CoursesListProps) {
-  const {
-    pagedCourses,
-    total,
-    totalPages,
-    currentPage,
-    setCurrentPage,
-    sortBy,
-    handleSortChange,
-    loading,
-  } = useCoursesList({
+  const { pagedCourses, total, totalPages, loading } = useCoursesList({
     selectedCategories,
     selectedTopics,
     selectedInstructors,
+    sortBy,
+    currentPage,
   });
 
   return (
@@ -37,7 +38,7 @@ export default function CoursesList({
         <p className="h-[24px] flex items-center justify-center text-[#666666] font-medium text-[16px] leading-[24px]">
           {total === 0 ? "No courses found" : `Showing ${Math.min(currentPage * 9, total)} out of ${total}`}
         </p>
-        <SortDropdown sortBy={sortBy} onChange={handleSortChange} />
+        <SortDropdown sortBy={sortBy} onChange={onSortChange} />
       </div>
 
       <div className="w-full mt-[32px] flex flex-wrap gap-[24px] min-h-[400px]">
@@ -53,7 +54,7 @@ export default function CoursesList({
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
-        onPageChange={setCurrentPage}
+        onPageChange={onPageChange}
       />
     </div>
   );

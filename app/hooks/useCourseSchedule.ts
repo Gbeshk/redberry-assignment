@@ -147,13 +147,24 @@ export function useCourseSchedule(courseId: string, onSignInClick: () => void) {
     ]).finally(() => setEnrollmentChecked(true));
   };
 
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setProfileComplete(false);
+    setProfileChecked(true);
+    setIsEnrolled(false);
+    setEnrollmentDetail(null);
+    setEnrollmentChecked(true);
+  };
+
   useEffect(() => {
     checkAuth();
     window.addEventListener("auth-updated", checkAuth);
     window.addEventListener("profile-updated", checkAuth);
+    window.addEventListener("auth-updated-logout", handleLogout);
     return () => {
       window.removeEventListener("auth-updated", checkAuth);
       window.removeEventListener("profile-updated", checkAuth);
+      window.removeEventListener("auth-updated-logout", handleLogout);
     };
   }, []);
 
