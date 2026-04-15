@@ -40,7 +40,7 @@ export default function ProfileFormFields({
   return (
     <>
       <div className="flex flex-col mt-[24px]">
-        <label className="text-sm font-medium">Full Name</label>
+        <label className={`text-sm font-medium ${errors.fullName ? "text-[#F4161A]" : ""}`}>Full Name</label>
         <div className="relative mt-[8px]">
           <input
             type="text"
@@ -79,7 +79,7 @@ export default function ProfileFormFields({
 
       <div className="flex gap-[8px] mt-[12px]">
         <div className="flex flex-col w-[267px]">
-          <label className="text-sm font-medium">Mobile Number</label>
+          <label className={`text-sm font-medium ${errors.mobile ? "text-[#F4161A]" : ""}`}>Mobile Number</label>
           <div
             className={`group relative mt-[8px] flex items-center border-[1.5px] rounded-[8px] h-[48px] overflow-hidden transition-colors duration-200 ${errors.mobile ? "border-[#F4161A]" : "border-[#D1D1D1] hover:border-[#ADADAD] focus-within:border-[#8A8A8A]"}`}
           >
@@ -108,7 +108,7 @@ export default function ProfileFormFields({
         </div>
 
         <div className="flex flex-col w-[85px]">
-          <label className="text-sm font-medium leading-normal">Age</label>
+          <label className={`text-sm font-medium leading-normal ${errors.age ? "text-[#F4161A]" : ""}`}>Age</label>
           <div className="relative mt-[8px]">
             <select
               value={age}
@@ -121,7 +121,7 @@ export default function ProfileFormFields({
                 onAgeOpenChange(false);
                 onBlurField("age");
               }}
-              className={`w-full border-[1.5px] rounded-[8px] h-[48px] pl-[12px] pr-[36px] text-[14px] font-medium leading-[100%] tracking-[0%] focus:outline-none focus:ring-0 appearance-none bg-white cursor-pointer transition-colors duration-200 ${errors.age ? "border-[#F4161A] text-[#F4161A]" : "border-[#D1D1D1] hover:border-[#ADADAD] focus:border-[#8A8A8A] text-[#8A8A8A]"}`}
+              className="w-full border-[1.5px] rounded-[8px] h-[48px] pl-[12px] pr-[36px] text-[14px] font-medium leading-[100%] tracking-[0%] focus:outline-none focus:ring-0 appearance-none bg-white cursor-pointer transition-colors duration-200 border-[#D1D1D1] hover:border-[#ADADAD] focus:border-[#8A8A8A] text-[#8A8A8A]"
             >
               <option value="" disabled>
                 Age

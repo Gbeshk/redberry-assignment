@@ -62,17 +62,26 @@ export default function AlreadyEnrolledCard({
 
   const courseId = enrollment.course?.id;
 
-  // Fetch the user's stored rating when already rated but value is unknown (e.g. after refresh)
   useEffect(() => {
     if (!isRated || rating !== null || !courseId) return;
     const token = localStorage.getItem("authToken");
     const stored = localStorage.getItem("userData");
     if (!token || !stored) return;
     let userId: number;
-    try { userId = JSON.parse(stored).id; } catch { return; }
-    fetch(`https://api.redclass.redberryinternship.ge/api/courses/${courseId}`, {
-      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-    })
+    try {
+      userId = JSON.parse(stored).id;
+    } catch {
+      return;
+    }
+    fetch(
+      `https://api.redclass.redberryinternship.ge/api/courses/${courseId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      },
+    )
       .then((r) => r.json())
       .then((data) => {
         const course = Array.isArray(data.data) ? data.data[0] : data.data;
@@ -273,7 +282,9 @@ export default function AlreadyEnrolledCard({
             <CloseIcon />
           </button>
           <p className="font-medium text-base leading-6 h-[24px] flex items-center mt-[40px] tracking-normal text-center text-[#525252]">
-            {ratingSubmitted ? "You've already rated this course" : "Rate your experience"}
+            {ratingSubmitted
+              ? "You've already rated this course"
+              : "Rate your experience"}
           </p>
           <StarRating
             rating={rating}

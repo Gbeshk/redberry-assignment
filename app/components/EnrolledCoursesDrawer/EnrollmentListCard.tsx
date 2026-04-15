@@ -25,7 +25,7 @@ export default function EnrollmentListCard({
           width={269}
           height={191}
           alt="courseImg"
-          className="w-[269px] h-[191px] rounded-[10px] object-cover"
+          className="w-[269px] h-[191px] rounded-[10px] object-cover  flex-shrink-0"
         />
 
         <div className="h-[186px] flex w-full flex-col">
@@ -85,7 +85,10 @@ export default function EnrollmentListCard({
         </div>
         <button
           type="button"
-          onClick={() => { router.push(`/courses/${enrollment.course.id}`); onClose(); }}
+          onClick={() => {
+            router.push(`/courses/${enrollment.course.id}`);
+            onClose();
+          }}
           className="w-[117px] h-[48px] flex items-center justify-center rounded-[8px] cursor-pointer border-[2px] border-[#958FEF] font-medium text-base leading-6 tracking-normal text-[#4F46E5] hover:bg-[#281ED2] hover:text-white hover:border-[#281ED2] active:bg-[#1E169D] active:text-white active:border-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:text-white focus-visible:border-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-[300ms] ease-out"
         >
           View

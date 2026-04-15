@@ -53,20 +53,13 @@ export default function PriceSummary({
         type="button"
         disabled={!canEnroll}
         onClick={onEnroll}
-        className="w-[450px] h-[63px] rounded-[12px] mt-[32px] font-semibold text-[20px] leading-[24px] tracking-normal flex items-center justify-center transition-colors duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5] disabled:cursor-not-allowed"
-        style={
-          canEnroll
-            ? {
-                backgroundColor: "#736BEA",
-                color: "#ffffff",
-                cursor: "pointer",
-              }
-            : {
-                backgroundColor: "#EEEDFC",
-                color: "#B7B3F4",
-                cursor: "default",
-              }
-        }
+        className={`w-[450px] h-[63px] rounded-[12px] mt-[32px] font-semibold text-[20px] leading-[24px] tracking-normal flex items-center justify-center transition-colors focus:bg-[#1E169D] duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5]
+    ${
+      canEnroll
+        ? "bg-[#736BEA] text-white hover:bg-[#281ED2] cursor-pointer"
+        : "bg-[#EEEDFC] text-[#B7B3F4] cursor-not-allowed"
+    }
+  `}
       >
         {enrolling ? "Enrolling..." : "Enroll Now"}
       </button>

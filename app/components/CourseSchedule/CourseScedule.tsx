@@ -8,7 +8,7 @@ import SessionTypeSection from "./SessionTypeSection";
 import PriceSummary from "./PriceSummary";
 import SuccessModal from "./SuccessModal";
 import CompleteProfileModal from "./CompleteProfileModal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCourseSchedule } from "@/app/hooks/useCourseSchedule";
 
 interface CourseScheduleProps {
@@ -33,6 +33,10 @@ export default function CourseScedule({
   const s = useCourseSchedule(courseId, onSignInClick);
   const [localRated, setLocalRated] = useState(false);
   const hasRated = isRated || localRated;
+
+  useEffect(() => {
+    if (!isRated) setLocalRated(false);
+  }, [isRated]);
 
   if (!s.enrollmentChecked) return (
     <div className="w-[530px] space-y-[12px] animate-pulse">
