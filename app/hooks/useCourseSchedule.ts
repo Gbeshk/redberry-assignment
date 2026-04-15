@@ -40,6 +40,9 @@ export function useCourseSchedule(courseId: string, onSignInClick: () => void) {
   const [weeklySchedules, setWeeklySchedules] = useState<WeeklySchedule[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
+  const [weeklySchedulesLoading, setWeeklySchedulesLoading] = useState(true);
+  const [timeSlotsLoading, setTimeSlotsLoading] = useState(false);
+  const [sessionTypesLoading, setSessionTypesLoading] = useState(false);
 
   const [selectedScheduleKey, setSelectedScheduleKey] = useState<string | null>(
     null,
@@ -169,10 +172,12 @@ export function useCourseSchedule(courseId: string, onSignInClick: () => void) {
   }, []);
 
   useEffect(() => {
+    setWeeklySchedulesLoading(true);
     fetch(`${BASE}/courses/${courseId}/weekly-schedules`)
       .then((r) => r.json())
       .then((json) => setWeeklySchedules(json.data ?? []))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setWeeklySchedulesLoading(false));
   }, [courseId]);
 
   useEffect(() => {
@@ -182,14 +187,17 @@ export function useCourseSchedule(courseId: string, onSignInClick: () => void) {
       setSelectedTimeSlotId(null);
       setSessionTypes([]);
       setSelectedSessionKey(null);
+      setTimeSlotsLoading(false);
       return;
     }
+    setTimeSlotsLoading(true);
     fetch(
       `${BASE}/courses/${courseId}/time-slots?weekly_schedule_id=${selectedScheduleId}`,
     )
       .then((r) => r.json())
       .then((json) => setTimeSlots(json.data ?? []))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setTimeSlotsLoading(false));
   }, [courseId, selectedScheduleId]);
 
   // --- Fetch session types when time slot selected ---
@@ -197,14 +205,17 @@ export function useCourseSchedule(courseId: string, onSignInClick: () => void) {
     if (selectedScheduleId === null || selectedTimeSlotId === null) {
       setSessionTypes([]);
       setSelectedSessionKey(null);
+      setSessionTypesLoading(false);
       return;
     }
+    setSessionTypesLoading(true);
     fetch(
       `${BASE}/courses/${courseId}/session-types?weekly_schedule_id=${selectedScheduleId}&time_slot_id=${selectedTimeSlotId}`,
     )
       .then((r) => r.json())
       .then((json) => setSessionTypes(json.data ?? []))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setSessionTypesLoading(false));
   }, [courseId, selectedScheduleId, selectedTimeSlotId]);
 
   // --- Lock scroll when modals open ---
@@ -349,8 +360,11 @@ export function useCourseSchedule(courseId: string, onSignInClick: () => void) {
   return {
     // data
     weeklySchedules,
+    weeklySchedulesLoading,
     timeSlots,
+    timeSlotsLoading,
     sessionTypes,
+    sessionTypesLoading,
     // selections
     selectedScheduleKey,
     selectedTimeSlotKey,

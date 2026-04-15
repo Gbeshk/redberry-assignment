@@ -11,6 +11,7 @@ const STATIC_SCHEDULES = [
 
 interface WeeklyScheduleSectionProps {
   weeklySchedules: WeeklySchedule[];
+  loading: boolean;
   selectedKey: string | null;
   isOpen: boolean;
   onToggle: () => void;
@@ -19,13 +20,13 @@ interface WeeklyScheduleSectionProps {
 
 export default function WeeklyScheduleSection({
   weeklySchedules,
+  loading,
   selectedKey,
   isOpen,
   onToggle,
   onSelect,
 }: WeeklyScheduleSectionProps) {
   const isAvailable = (label: string) =>
-    weeklySchedules.length === 0 ||
     !!weeklySchedules.find(
       (s) => s.label.toLowerCase() === label.toLowerCase(),
     );
@@ -59,27 +60,29 @@ export default function WeeklyScheduleSection({
 
       {isOpen && (
         <div className="w-full h-[91px] mt-[18px] flex items-center justify-between gap-[12px]">
-          {STATIC_SCHEDULES.map(({ key, label, short }) => {
-            const available = isAvailable(label);
-            const selected = selectedKey === key;
-            return (
-              <div
-                key={key}
-                onClick={() => {
-                  if (available) onSelect(key, label);
-                }}
-                className={
-                  !available
-                    ? "text-[#D1D1D1] h-full font-semibold text-[16px] leading-none border-[1px] border-[#D1D1D1] rounded-[12px] flex items-center justify-center bg-[#F5F5F5] w-full cursor-default transition-all duration-300 ease-out"
-                    : selected
-                      ? "text-[#4F46E5] h-full font-semibold text-[16px] leading-none border-[2px] border-[#958FEF] rounded-[12px] flex items-center justify-center bg-[#DDDBFA] w-full cursor-pointer transition-all duration-300 ease-out"
-                      : "text-[#292929] h-full font-semibold text-[16px] leading-none border-[1px] border-[#D1D1D1] rounded-[12px] flex items-center justify-center bg-white w-full cursor-pointer hover:bg-[#DDDBFA] hover:text-[#4F46E5] hover:border-[#958FEF] transition-all duration-300 ease-out"
-                }
-              >
-                {short}
-              </div>
-            );
-          })}
+          {loading
+            ? STATIC_SCHEDULES.map(({ key }) => (
+                <div key={key} className="h-full w-full rounded-[12px] bg-[#E8E8E8] animate-pulse" />
+              ))
+            : STATIC_SCHEDULES.map(({ key, label, short }) => {
+                const available = isAvailable(label);
+                const selected = selectedKey === key;
+                return (
+                  <div
+                    key={key}
+                    onClick={() => { if (available) onSelect(key, label); }}
+                    className={
+                      !available
+                        ? "text-[#D1D1D1] h-full font-semibold text-[16px] leading-none border-[1px] border-[#D1D1D1] rounded-[12px] flex items-center justify-center bg-[#F5F5F5] w-full cursor-default transition-all duration-300 ease-out"
+                        : selected
+                          ? "text-[#4F46E5] h-full font-semibold text-[16px] leading-none border-[2px] border-[#958FEF] rounded-[12px] flex items-center justify-center bg-[#DDDBFA] w-full cursor-pointer transition-all duration-300 ease-out"
+                          : "text-[#292929] h-full font-semibold text-[16px] leading-none border-[1px] border-[#D1D1D1] rounded-[12px] flex items-center justify-center bg-white w-full cursor-pointer hover:bg-[#DDDBFA] hover:text-[#4F46E5] hover:border-[#958FEF] transition-all duration-300 ease-out"
+                    }
+                  >
+                    {short}
+                  </div>
+                );
+              })}
         </div>
       )}
     </div>

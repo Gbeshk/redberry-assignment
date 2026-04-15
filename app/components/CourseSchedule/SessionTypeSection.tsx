@@ -44,7 +44,7 @@ const SESSION_CONFIGS = [
 ];
 
 interface SessionTypeSectionProps {
-  sessionTypes: SessionType[];
+  loading: boolean;
   selectedKey: string | null;
   selectedTimeSlotId: number | null;
   isOpen: boolean;
@@ -57,7 +57,7 @@ interface SessionTypeSectionProps {
 }
 
 export default function SessionTypeSection({
-  sessionTypes,
+  loading,
   selectedKey,
   selectedTimeSlotId,
   isOpen,
@@ -105,23 +105,6 @@ export default function SessionTypeSection({
   };
 
   const getSeatsNode = (key: string): React.ReactNode => {
-    if (sessionTypes.length === 0) {
-      if (key === "in_person") {
-        return (
-          <div className="flex items-center gap-[4px]">
-            <WarningIcon />
-            <p className="font-medium text-[12px] text-[#F4A316] leading-none tracking-normal">
-              Only 3 Seats Remaining
-            </p>
-          </div>
-        );
-      }
-      return (
-        <p className="text-[#3D3D3D] font-medium text-[12px] leading-none tracking-normal">
-          50 Seats Available
-        </p>
-      );
-    }
     const s = matchSession(key);
     if (!s) return null;
     if (s.availableSeats === 0)
@@ -176,7 +159,11 @@ export default function SessionTypeSection({
 
       {isOpen && selectedTimeSlotId !== null && (
         <div className="w-full mt-[18px] grid h-[155px] grid-cols-3 gap-[8px]">
-          {SESSION_CONFIGS.map(
+          {loading
+            ? SESSION_CONFIGS.map(({ key }) => (
+                <div key={key} className="h-[131px] w-full rounded-[12px] bg-[#E8E8E8] animate-pulse" />
+              ))
+            : SESSION_CONFIGS.map(
             ({ key, label, subtitle, hasLocation, Icon }) => (
               <div
                 key={key}
@@ -231,6 +218,7 @@ export default function SessionTypeSection({
           )}
         </div>
       )}
+
     </div>
   );
 }

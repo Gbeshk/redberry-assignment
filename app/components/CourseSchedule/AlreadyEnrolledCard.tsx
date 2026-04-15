@@ -34,7 +34,7 @@ export default function AlreadyEnrolledCard({
   enrollment: EnrollmentDetail;
   isRated: boolean;
   courseTitle: string;
-  onRated: () => void;
+  onRated: (star: number) => void;
   onUnenroll: () => void;
 }) {
   const [isCompleted, setIsCompleted] = useState(enrollment.progress >= 100);
@@ -46,6 +46,12 @@ export default function AlreadyEnrolledCard({
   const [isRating, setIsRating] = useState(false);
   const [ratingSubmitted, setRatingSubmitted] = useState(isRated);
   const [ratingDismissed, setRatingDismissed] = useState(false);
+
+  useEffect(() => {
+    setRatingSubmitted(isRated);
+    setRatingDismissed(false);
+    if (!isRated) setRating(null);
+  }, [isRated]);
 
   useEffect(() => {
     document.body.style.overflow = showCongrats ? "hidden" : "";
@@ -111,7 +117,7 @@ export default function AlreadyEnrolledCard({
       );
       if (res.ok || res.status === 409) {
         setRatingSubmitted(true);
-        onRated();
+        onRated(star);
       }
     } catch {
     } finally {
@@ -183,7 +189,7 @@ export default function AlreadyEnrolledCard({
         );
         if (res.ok || res.status === 409) {
           setRatingSubmitted(true);
-          onRated();
+          onRated(rating!);
         }
       } catch {
       } finally {

@@ -8,7 +8,7 @@ import SessionTypeSection from "./SessionTypeSection";
 import PriceSummary from "./PriceSummary";
 import SuccessModal from "./SuccessModal";
 import CompleteProfileModal from "./CompleteProfileModal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCourseSchedule } from "@/app/hooks/useCourseSchedule";
 
 interface CourseScheduleProps {
@@ -18,6 +18,7 @@ interface CourseScheduleProps {
   isRated: boolean;
   onSignInClick: () => void;
   onCompleteProfileClick: () => void;
+  onRatingSubmitted?: (star: number) => void;
 }
 
 export default function CourseScedule({
@@ -27,9 +28,14 @@ export default function CourseScedule({
   isRated,
   onSignInClick,
   onCompleteProfileClick,
+  onRatingSubmitted,
 }: CourseScheduleProps) {
   const s = useCourseSchedule(courseId, onSignInClick);
   const [hasRated, setHasRated] = useState(isRated);
+
+  useEffect(() => {
+    setHasRated(isRated);
+  }, [isRated]);
 
   if (!s.enrollmentChecked) return (
     <div className="w-[530px] space-y-[12px] animate-pulse">
@@ -47,7 +53,7 @@ export default function CourseScedule({
         enrollment={s.enrollmentDetail}
         isRated={hasRated}
         courseTitle={courseTitle}
-        onRated={() => setHasRated(true)}
+        onRated={(star) => { setHasRated(true); onRatingSubmitted?.(star); }}
         onUnenroll={() => {
           s.setIsEnrolled(false);
           s.setEnrollmentDetail(null);
@@ -61,6 +67,7 @@ export default function CourseScedule({
       <div className="w-[530px]">
         <WeeklyScheduleSection
           weeklySchedules={s.weeklySchedules}
+          loading={s.weeklySchedulesLoading}
           selectedKey={s.selectedScheduleKey}
           isOpen={s.scheduleOpen}
           onToggle={s.handleToggleSchedule}
@@ -77,7 +84,7 @@ export default function CourseScedule({
           onHover={s.setHoveredTimeSlotKey}
         />
         <SessionTypeSection
-          sessionTypes={s.sessionTypes}
+          loading={s.sessionTypesLoading}
           selectedKey={s.selectedSessionKey}
           selectedTimeSlotId={s.selectedTimeSlotId}
           isOpen={s.sessionOpen}

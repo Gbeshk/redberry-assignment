@@ -94,7 +94,10 @@ function CoursesPageInner() {
           sortBy={sortBy}
           currentPage={currentPage}
           onSortChange={(sort) => updateURL({ sort, page: 1 })}
-          onPageChange={(page) => updateURL({ page })}
+          onPageChange={(page) => {
+            updateURL({ page });
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
         />
       </div>
     </div>

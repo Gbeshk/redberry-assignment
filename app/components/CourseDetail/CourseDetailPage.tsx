@@ -17,7 +17,7 @@ export default function CourseDetailPage() {
   const [signUpModalOpen, setSignUpModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
 
-  useEffect(() => {
+  const fetchCourse = () => {
     const token = localStorage.getItem("authToken");
     const headers: HeadersInit = { Accept: "application/json" };
     if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -45,6 +45,19 @@ export default function CourseDetailPage() {
         }
         setCourse(courseData);
       });
+  };
+
+  useEffect(() => {
+    fetchCourse();
+  }, [id]);
+
+  useEffect(() => {
+    window.addEventListener("auth-updated", fetchCourse);
+    window.addEventListener("auth-updated-logout", fetchCourse);
+    return () => {
+      window.removeEventListener("auth-updated", fetchCourse);
+      window.removeEventListener("auth-updated-logout", fetchCourse);
+    };
   }, [id]);
 
   if (!course) return (
@@ -104,6 +117,14 @@ export default function CourseDetailPage() {
           basePrice={Number(course.basePrice)}
           onSignInClick={() => setSignInModalOpen(true)}
           onCompleteProfileClick={() => setProfileModalOpen(true)}
+          onRatingSubmitted={(star) => {
+            setCourse((prev) => {
+              if (!prev) return prev;
+              const newCount = prev.reviewCount + 1;
+              const newAvg = (prev.avgRating * prev.reviewCount + star) / newCount;
+              return { ...prev, avgRating: newAvg, reviewCount: newCount, isRated: true };
+            });
+          }}
         />
       </div>
 

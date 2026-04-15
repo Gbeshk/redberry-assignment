@@ -45,11 +45,19 @@ function HeroSlider() {
 
   useEffect(() => {
     resetTimer();
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, []);
 
-  const prev = () => { setCurrent((c) => (c - 1 + slides.length) % slides.length); resetTimer(); };
-  const next = () => { setCurrent((c) => (c + 1) % slides.length); resetTimer(); };
+  const prev = () => {
+    setCurrent((c) => (c - 1 + slides.length) % slides.length);
+    resetTimer();
+  };
+  const next = () => {
+    setCurrent((c) => (c + 1) % slides.length);
+    resetTimer();
+  };
   const router = useRouter();
 
   return (
@@ -96,7 +104,10 @@ function HeroSlider() {
                     {slides.map((_, i) => (
                       <div
                         key={i}
-                        onClick={() => { setCurrent(i); resetTimer(); }}
+                        onClick={() => {
+                          setCurrent(i);
+                          resetTimer();
+                        }}
                         className="w-[57px] h-[8px] rounded-[999px] cursor-pointer transition-colors duration-300"
                         style={{
                           backgroundColor:

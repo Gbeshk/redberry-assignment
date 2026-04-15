@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Logo from "@/public/images/logo.svg";
 import NavIcon from "@/app/components/icons/NavIcon";
 import EnrolledCoursesIcon from "@/app/components/icons/EnrolledCoursesIcon";
@@ -35,6 +35,8 @@ export default function Header({
   onLogoutClick,
 }: HeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const onCoursesPage = pathname.startsWith("/courses");
 
   return (
     <div className="flex w-full items-center h-[108px] border-b-[#D1D1D1] border-b-[1px]">
@@ -53,8 +55,8 @@ export default function Header({
             onClick={() => router.push("/courses")}
             className={`min-w-[220px] ${NAV_LINK_BASE}`}
           >
-            <span className={NAV_ICON_BASE}><NavIcon /></span>
-            <p className={NAV_TEXT_BASE}>Browse Courses</p>
+            <span className={`${NAV_ICON_BASE} ${onCoursesPage ? "!text-[#4F46E5]" : ""}`}><NavIcon /></span>
+            <p className={`${NAV_TEXT_BASE} ${onCoursesPage ? "!text-[#4F46E5]" : ""}`}>Browse Courses</p>
           </div>
 
           {isLoggedIn ? (
