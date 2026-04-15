@@ -66,11 +66,9 @@ export function useCoursesList({
     const controller = new AbortController();
     setLoading(true);
 
-    // UI page N shows items at 0-based indices: (N-1)*9 … N*9-1
     const firstIdx = (currentPage - 1) * UI_PAGE_SIZE;
     const lastIdx = currentPage * UI_PAGE_SIZE - 1;
 
-    // Which API pages (1-based) contain those indices?
     const firstApiPage = Math.floor(firstIdx / API_PAGE_SIZE) + 1;
     const lastApiPage = Math.floor(lastIdx / API_PAGE_SIZE) + 1;
 

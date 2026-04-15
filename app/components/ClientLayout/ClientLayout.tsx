@@ -68,9 +68,6 @@ export default function ClientLayout({
       setIsLoggedIn(true);
       refreshUser();
     }
-  }, []);
-
-  useEffect(() => {
     const handleAuthUpdated = () => {
       setIsLoggedIn(true);
       refreshUser();

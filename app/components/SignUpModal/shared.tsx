@@ -1,4 +1,3 @@
-// Shared style helpers + tiny presentational atoms for SignUpModal steps
 
 export const inputClass = (hasError: boolean) =>
   `w-full mt-[8px] h-[48px] rounded-[8px] pl-[13px] pr-[15px] py-[12px]

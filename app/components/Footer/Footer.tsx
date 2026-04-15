@@ -26,7 +26,6 @@ export default function Footer({
   return (
     <div className="w-full h-[334px] border-t-[1px] border-t-[#D1D1D1] mt-[162px]">
       <div className="mt-[80px] flex w-[1566px] mx-auto justify-between">
-        {/* Brand */}
         <div>
           <div className="flex items-center gap-[12px]">
             <div className="w-[60px] h-[60px] bg-[#4F46E5] rounded-[14px] flex items-center justify-center">
@@ -55,7 +54,6 @@ export default function Footer({
         </div>
 
         <div className="flex gap-[120px]">
-          {/* Explore */}
           <div>
             <p className="text-[#130E67] font-semibold text-[20px] leading-[24px] tracking-normal">
               Explore
@@ -74,7 +72,6 @@ export default function Footer({
             </p>
           </div>
 
-          {/* Account */}
           <div>
             <p className="text-[#130E67] font-semibold text-[20px] leading-[24px] tracking-normal">
               Account
@@ -87,7 +84,6 @@ export default function Footer({
             </p>
           </div>
 
-          {/* Contact */}
           <div>
             <p className="text-[#130E67] font-semibold text-[20px] leading-none tracking-normal">
               Contact
@@ -111,7 +107,6 @@ export default function Footer({
         </div>
       </div>
 
-      {/* Bottom bar */}
       <div className="w-[1566px] mx-auto mt-[74px] flex justify-between items-center">
         <p className="text-[#666666] font-normal text-[18px] leading-none tracking-normal">
           Copyright © 2026 Redberry International

@@ -75,7 +75,6 @@ export function useSignInModal(
       try {
         data = JSON.parse(await response.text());
       } catch {
-        /* non-JSON response */
       }
 
       if (!response.ok) {

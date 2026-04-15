@@ -1,5 +1,4 @@
 "use client";
-import { useEffect } from "react";
 import CloseIcon from "@/app/components/icons/CloseIcon";
 import EyeOpenIcon from "@/app/components/icons/EyeOpenIcon";
 import EyeClosedIcon from "@/app/components/icons/EyeClosedIcon";
@@ -12,7 +11,6 @@ interface SignInModalProps {
   onSuccess?: () => void | Promise<void>;
 }
 
-// --- Shared style helpers ---
 const inputClass = (hasError: boolean) =>
   `w-full mt-[8px] h-[48px] rounded-[8px] pl-[13px] pr-[15px] py-[12px]
    text-[14px] font-medium leading-[100%] tracking-[0%]
@@ -50,12 +48,6 @@ export default function SignInModal({
 }: SignInModalProps) {
   const s = useSignInModal(onClose, onSuccess);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") s.handleClose(); };
-    if (isOpen) document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
   const passwordHasError = !!(s.passwordError || s.credentialsError);
@@ -66,6 +58,7 @@ export default function SignInModal({
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{ backgroundColor: "#00000040" }}
       onClick={s.handleClose}
+      onKeyDown={(e) => { if (e.key === "Escape") s.handleClose(); }}
     >
       <style>{`
         @keyframes errorIn {
@@ -80,7 +73,6 @@ export default function SignInModal({
         style={{ width: "460px", minHeight: "481px" }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="mt-[21px] flex items-center justify-between px-[16px]">
           <div style={{ width: "16px" }} />
           <div className="cursor-pointer" onClick={s.handleClose}>
@@ -96,7 +88,6 @@ export default function SignInModal({
             Log in to continue your learning
           </p>
 
-          {/* Email */}
           <div className="flex flex-col">
             <label htmlFor="signin-email" className={labelClass(emailHasError)}>
               Email*
@@ -116,7 +107,6 @@ export default function SignInModal({
             {s.emailError && <ErrorMessage msg={s.emailError} />}
           </div>
 
-          {/* Password */}
           <div className="flex flex-col">
             <label
               htmlFor="signin-password"
@@ -158,7 +148,6 @@ export default function SignInModal({
             {s.credentialsError && <ErrorMessage msg={s.credentialsError} />}
           </div>
 
-          {/* Submit */}
           <button
             type="button"
             onClick={s.handleSignIn}
@@ -168,7 +157,6 @@ export default function SignInModal({
             {s.isSubmitting ? "Logging In..." : "Log In"}
           </button>
 
-          {/* Divider */}
           <div className="flex items-center w-[320px] mx-auto mt-[16px] h-[21px]">
             <div className="flex-1 h-[1px] bg-[#D1D1D1]" />
             <span className="px-[8px] text-[14px] font-medium leading-[100%] tracking-[0%] text-center text-[#8A8A8A]">
@@ -177,7 +165,6 @@ export default function SignInModal({
             <div className="flex-1 h-[1px] bg-[#D1D1D1]" />
           </div>
 
-          {/* Sign up link */}
           <div className="flex items-center justify-center mt-[8px]">
             <p className="text-[#666666] font-normal text-[12px] leading-[100%] tracking-[0%] text-center">
               Don&apos;t have an account?

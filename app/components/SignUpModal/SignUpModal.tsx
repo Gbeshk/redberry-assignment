@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useSignUpModal } from "@/app/hooks/useSignUpModal";
 import CloseSvg from "../icons/CloseSvg";
 import GoBackSvg from "../icons/GoBackSvg";
 import ProgressBars from "./ProgressBars";
@@ -20,186 +20,13 @@ const MODAL_MIN_HEIGHTS: Record<number, string> = {
   3: "622px",
 };
 
-const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
-
 export default function SignUpModal({
   isOpen,
   onClose,
   onSuccess,
   onSignInClick,
 }: SignUpModalProps) {
-  const [step, setStep] = useState(1);
-  const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [username, setUsername] = useState("");
-  const [usernameError, setUsernameError] = useState("");
-  const [avatar, setAvatar] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [avatarError, setAvatarError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
-  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
-  const [isConfirmPasswordFocused, setIsConfirmPasswordFocused] =
-    useState(false);
-
-  const handleClose = () => {
-    setStep(1);
-    setEmail("");
-    setEmailError("");
-    setPassword("");
-    setConfirmPassword("");
-    setPasswordError("");
-    setShowPassword(false);
-    setShowConfirmPassword(false);
-    setUsername("");
-    setUsernameError("");
-    setAvatar(null);
-    setAvatarPreview(null);
-    setAvatarError("");
-    setIsSubmitting(false);
-    setSubmitError("");
-    onClose();
-  };
-
-  const handleNext = () => {
-    if (!email.trim()) return setEmailError("Email is required.");
-    if (!EMAIL_REGEX.test(email))
-      return setEmailError("Please enter a valid email address.");
-    setEmailError("");
-    setStep(2);
-  };
-
-  const handleNextPassword = () => {
-    if (!password.trim()) return setPasswordError("Password is required.");
-    if (password.length < 3)
-      return setPasswordError("Password must be at least 3 characters.");
-    if (password !== confirmPassword)
-      return setPasswordError("Passwords do not match.");
-    setPasswordError("");
-    setStep(3);
-  };
-
-  const handleAvatarChange = (file: File) => {
-    if (file.size > 2 * 1024 * 1024) {
-      setAvatarError("Image must be smaller than 2MB.");
-      setAvatar(file);
-      setAvatarPreview(URL.createObjectURL(file));
-      return;
-    }
-    const allowed = ["image/jpeg", "image/png", "image/webp"];
-    if (!allowed.includes(file.type)) {
-      setAvatarError("Only JPG, PNG, or WebP files are allowed.");
-      setAvatar(file);
-      setAvatarPreview(URL.createObjectURL(file));
-      return;
-    }
-    setAvatarError("");
-    const img = new Image();
-    const objectUrl = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      const MAX = 800;
-      const scale = Math.min(1, MAX / Math.max(img.width, img.height));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) return;
-          const compressed = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
-          setAvatar(compressed);
-          setAvatarPreview(URL.createObjectURL(compressed));
-        },
-        "image/jpeg",
-        0.8,
-      );
-    };
-    img.src = objectUrl;
-  };
-
-
-
-  const handleSignUp = async () => {
-    if (!username.trim()) return setUsernameError("Username is required.");
-    if (username.length < 3)
-      return setUsernameError(
-        "The username field must be at least 3 characters.",
-      );
-    setUsernameError("");
-    if (avatarError) return;
-    setIsSubmitting(true);
-    setSubmitError("");
-
-    try {
-      const formData = new FormData();
-      formData.append("username", username);
-      formData.append("email", email);
-      formData.append("password", password);
-      formData.append("password_confirmation", confirmPassword);
-      if (avatar) formData.append("avatar", avatar);
-
-      const response = await fetch(
-        "https://api.redclass.redberryinternship.ge/api/register",
-        {
-          method: "POST",
-          headers: { Accept: "application/json" },
-          body: formData,
-        },
-      );
-
-      const rawText = await response.text();
-      let data: {
-        data?: { token?: string };
-        errors?: { email?: string[]; username?: string[] };
-      } | null = null;
-      try {
-        data = JSON.parse(rawText);
-      } catch {
-        console.warn("Response is not JSON");
-      }
-
-      if (!response.ok) {
-        if (response.status === 422 && data?.errors) {
-          if (data.errors.email?.[0]) {
-            setStep(1);
-            setEmailError(data.errors.email[0]);
-          }
-          if (data.errors.username?.[0])
-            setUsernameError(data.errors.username[0]);
-          if (!data.errors.email && !data.errors.username)
-            setSubmitError("Please check your details and try again.");
-        } else {
-          setSubmitError("Something went wrong. Please try again.");
-        }
-      } else {
-        const token = data?.data?.token;
-        if (token) {
-          localStorage.setItem("authToken", token);
-          window.dispatchEvent(new Event("auth-updated"));
-        }
-        handleClose();
-        onSuccess?.();
-      }
-    } catch {
-      setSubmitError(
-        "Something went wrong. Please check your connection and try again.",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") handleClose(); };
-    if (isOpen) document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
+  const s = useSignUpModal(onClose, onSuccess);
 
   if (!isOpen) return null;
 
@@ -207,21 +34,22 @@ export default function SignUpModal({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{ backgroundColor: "#00000040" }}
-      onClick={handleClose}
+      onClick={s.handleClose}
+      onKeyDown={(e) => { if (e.key === "Escape") s.handleClose(); }}
     >
       <div
         className="bg-white rounded-[16px] relative pb-[50px]"
         style={{
           width: "460px",
-          minHeight: MODAL_MIN_HEIGHTS[step],
+          minHeight: MODAL_MIN_HEIGHTS[s.step],
           transition: "min-height 0.3s ease",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {step > 1 ? (
+        {s.step > 1 ? (
           <div
             className="cursor-pointer absolute top-[16.5px] left-[17px]"
-            onClick={() => setStep((s) => s - 1)}
+            onClick={() => s.setStep((prev) => prev - 1)}
           >
             <GoBackSvg />
           </div>
@@ -231,7 +59,7 @@ export default function SignUpModal({
 
         <div
           className="cursor-pointer absolute right-[15px] top-[20.5px]"
-          onClick={handleClose}
+          onClick={s.handleClose}
         >
           <CloseSvg />
         </div>
@@ -244,70 +72,70 @@ export default function SignUpModal({
             Join and start learning today
           </p>
 
-          <ProgressBars step={step} />
+          <ProgressBars step={s.step} />
 
-          {step === 1 && (
+          {s.step === 1 && (
             <SignUpStep1
-              email={email}
-              emailError={emailError}
+              email={s.email}
+              emailError={s.emailError}
               onEmailChange={(v) => {
-                setEmail(v);
-                if (emailError) setEmailError("");
+                s.setEmail(v);
+                if (s.emailError) s.setEmailError("");
               }}
-              onNext={handleNext}
+              onNext={s.handleNext}
               onSignInClick={() => {
-                handleClose();
+                s.handleClose();
                 onSignInClick?.();
               }}
             />
           )}
 
-          {step === 2 && (
+          {s.step === 2 && (
             <SignUpStep2
-              password={password}
-              confirmPassword={confirmPassword}
-              passwordError={passwordError}
-              showPassword={showPassword}
-              showConfirmPassword={showConfirmPassword}
-              isPasswordFocused={isPasswordFocused}
-              isConfirmPasswordFocused={isConfirmPasswordFocused}
+              password={s.password}
+              confirmPassword={s.confirmPassword}
+              passwordError={s.passwordError}
+              showPassword={s.showPassword}
+              showConfirmPassword={s.showConfirmPassword}
+              isPasswordFocused={s.isPasswordFocused}
+              isConfirmPasswordFocused={s.isConfirmPasswordFocused}
               onPasswordChange={(v) => {
-                setPassword(v);
-                if (passwordError) setPasswordError("");
+                s.setPassword(v);
+                if (s.passwordError) s.setPasswordError("");
               }}
               onConfirmPasswordChange={(v) => {
-                setConfirmPassword(v);
-                if (passwordError) setPasswordError("");
+                s.setConfirmPassword(v);
+                if (s.passwordError) s.setPasswordError("");
               }}
-              onTogglePassword={() => setShowPassword((v) => !v)}
-              onToggleConfirmPassword={() => setShowConfirmPassword((v) => !v)}
-              onPasswordFocus={setIsPasswordFocused}
-              onConfirmPasswordFocus={setIsConfirmPasswordFocused}
-              onNext={handleNextPassword}
+              onTogglePassword={() => s.setShowPassword((v) => !v)}
+              onToggleConfirmPassword={() => s.setShowConfirmPassword((v) => !v)}
+              onPasswordFocus={s.setIsPasswordFocused}
+              onConfirmPasswordFocus={s.setIsConfirmPasswordFocused}
+              onNext={s.handleNextPassword}
               onSignInClick={() => {
-                handleClose();
+                s.handleClose();
                 onSignInClick?.();
               }}
             />
           )}
 
-          {step === 3 && (
+          {s.step === 3 && (
             <SignUpStep3
-              username={username}
-              usernameError={usernameError}
-              avatar={avatar}
-              avatarPreview={avatarPreview}
-              avatarError={avatarError}
-              submitError={submitError}
-              isSubmitting={isSubmitting}
+              username={s.username}
+              usernameError={s.usernameError}
+              avatar={s.avatar}
+              avatarPreview={s.avatarPreview}
+              avatarError={s.avatarError}
+              submitError={s.submitError}
+              isSubmitting={s.isSubmitting}
               onUsernameChange={(v) => {
-                setUsername(v);
-                if (usernameError) setUsernameError("");
+                s.setUsername(v);
+                if (s.usernameError) s.setUsernameError("");
               }}
-              onAvatarChange={handleAvatarChange}
-              onSubmit={handleSignUp}
+              onAvatarChange={s.handleAvatarChange}
+              onSubmit={s.handleSignUp}
               onSignInClick={() => {
-                handleClose();
+                s.handleClose();
                 onSignInClick?.();
               }}
             />

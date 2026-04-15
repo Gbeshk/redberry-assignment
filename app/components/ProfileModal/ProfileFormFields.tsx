@@ -39,7 +39,6 @@ export default function ProfileFormFields({
 }: ProfileFormFieldsProps) {
   return (
     <>
-      {/* Full Name */}
       <div className="flex flex-col mt-[24px]">
         <label className="text-sm font-medium">Full Name</label>
         <div className="relative mt-[8px]">
@@ -48,7 +47,8 @@ export default function ProfileFormFields({
             placeholder="Full Name"
             value={fullName}
             onChange={(e) => {
-              onFullNameChange(e.target.value);
+              const value = e.target.value.replace(/[^a-zA-Zა-ჰ\s]/g, "");
+              onFullNameChange(value);
               if (errors.fullName) clearError("fullName");
             }}
             onBlur={() => onBlurField("fullName")}
@@ -61,7 +61,6 @@ export default function ProfileFormFields({
         {errors.fullName && <p className={ERROR_TEXT}>{errors.fullName}</p>}
       </div>
 
-      {/* Email (disabled) */}
       <div className="flex flex-col mt-[12px]">
         <label className="text-sm font-medium">Email</label>
         <div className="relative mt-[8px]">
@@ -78,9 +77,7 @@ export default function ProfileFormFields({
         </div>
       </div>
 
-      {/* Mobile + Age */}
       <div className="flex gap-[8px] mt-[12px]">
-        {/* Mobile */}
         <div className="flex flex-col w-[267px]">
           <label className="text-sm font-medium">Mobile Number</label>
           <div
@@ -96,11 +93,12 @@ export default function ProfileFormFields({
               placeholder="Mobile Number"
               value={mobileNumber}
               onChange={(e) => {
-                onMobileChange(e.target.value);
-                if (errors.mobile) clearError("mobile");
+                const value = e.target.value.replace(/\D/g, "");
+                onMobileChange(value);
+                if (value) clearError("mobile");
               }}
               onBlur={() => onBlurField("mobile")}
-              className={`flex-1 h-full pr-[40px] text-[14px] font-medium leading-none tracking-[0%] caret-[#8A8A8A] placeholder:text-[#8A8A8A] placeholder:font-medium hover:placeholder:text-[#D1D1D1] focus:placeholder:text-[#F5F5F5] focus:outline-none focus:ring-0 ${errors.mobile ? "text-[#F4161A]" : "text-[#3D3D3D]"}`}
+              className={`flex-1 pr-[40px] text-[14px] font-medium leading-none tracking-[0%] caret-[#8A8A8A] placeholder:text-[#8A8A8A] placeholder:font-medium hover:placeholder:text-[#D1D1D1] focus:placeholder:text-[#F5F5F5] focus:outline-none focus:ring-0 bg-transparent ${errors.mobile ? "text-[#F4161A]" : "text-[#3D3D3D]"}`}
             />
             <div className="absolute right-[12px] top-1/2 -translate-y-1/2">
               <EditNameIcon />
@@ -109,7 +107,6 @@ export default function ProfileFormFields({
           {errors.mobile && <p className={ERROR_TEXT}>{errors.mobile}</p>}
         </div>
 
-        {/* Age */}
         <div className="flex flex-col w-[85px]">
           <label className="text-sm font-medium leading-normal">Age</label>
           <div className="relative mt-[8px]">
@@ -120,7 +117,10 @@ export default function ProfileFormFields({
                 onAgeChange(e.target.value);
                 onAgeOpenChange(false);
               }}
-              onBlur={() => { onAgeOpenChange(false); onBlurField("age"); }}
+              onBlur={() => {
+                onAgeOpenChange(false);
+                onBlurField("age");
+              }}
               className={`w-full border-[1.5px] rounded-[8px] h-[48px] pl-[12px] pr-[36px] text-[14px] font-medium leading-[100%] tracking-[0%] focus:outline-none focus:ring-0 appearance-none bg-white cursor-pointer transition-colors duration-200 ${errors.age ? "border-[#F4161A] text-[#F4161A]" : "border-[#D1D1D1] hover:border-[#ADADAD] focus:border-[#8A8A8A] text-[#8A8A8A]"}`}
             >
               <option value="" disabled>

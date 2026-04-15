@@ -7,31 +7,35 @@ import { useRouter } from "next/navigation";
 import ArrowRight from "../icons/ArrowRight";
 import ArrowLeft from "../icons/ArrowLeft";
 
+const SLIDES = [
+  {
+    image: SwiperPic1,
+    title: "Start learning something new today",
+    subtitle:
+      "Explore a wide range of expert-led courses in design, development, business, and more. Find the skills you need to grow your career and learn at your own pace.",
+    btnText: "Browse Courses",
+  },
+  {
+    image: SwiperPic2,
+    title: "Pick up where you left off",
+    subtitle:
+      "Your learning journey is already in progress. Continue your enrolled courses, track your progress, and stay on track toward completing your goals.",
+    btnText: "Start Learning",
+  },
+  {
+    image: SwiperPic3,
+    title: "Learn together, grow faster",
+    subtitle: null,
+    btnText: "Learn more",
+  },
+];
+const BTN_WIDTHS = [206, 187, 159];
+const BG_POSITIONS = ["center", "center -170px", "center -72px"];
+
 function HeroSlider() {
-  const slides = [
-    {
-      image: SwiperPic1,
-      title: "Start learning something new today",
-      subtitle:
-        "Explore a wide range of expert-led courses in design, development, business, and more. Find the skills you need to grow your career and learn at your own pace.",
-      btnText: "Browse Courses",
-    },
-    {
-      image: SwiperPic2,
-      title: "Pick up where you left off",
-      subtitle:
-        "Your learning journey is already in progress. Continue your enrolled courses, track your progress, and stay on track toward completing your goals.",
-      btnText: "Start Learning",
-    },
-    {
-      image: SwiperPic3,
-      title: "Learn together, grow faster",
-      subtitle: null,
-      btnText: "Learn more",
-    },
-  ];
-  const btnWidths = [206, 187, 159];
-  const bgPositions = ["center", "center -170px", "center -72px"];
+  const slides = SLIDES;
+  const btnWidths = BTN_WIDTHS;
+  const bgPositions = BG_POSITIONS;
 
   const [current, setCurrent] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -128,7 +132,6 @@ function HeroSlider() {
           </div>
         </div>
 
-        {/* Arrows fixed outside slider */}
         <div className="absolute bottom-[55px] right-[48px] flex items-center justify-between w-[132px] h-[54px]">
           <ArrowLeft onClick={prev} isDisabled={current === 0} />
           <ArrowRight

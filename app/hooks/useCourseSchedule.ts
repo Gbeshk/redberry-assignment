@@ -218,16 +218,6 @@ export function useCourseSchedule(courseId: string, onSignInClick: () => void) {
       .finally(() => setSessionTypesLoading(false));
   }, [courseId, selectedScheduleId, selectedTimeSlotId]);
 
-  // --- Lock scroll when modals open ---
-  useEffect(() => {
-    document.body.style.overflow =
-      showSuccessModal || showCompleteProfileModal ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [showSuccessModal, showCompleteProfileModal]);
-
-  // --- Helpers ---
   const matchSchedule = (label: string) =>
     weeklySchedules.find((s) => s.label.toLowerCase() === label.toLowerCase());
 
@@ -252,7 +242,6 @@ export function useCourseSchedule(courseId: string, onSignInClick: () => void) {
     ? parseFloat(selectedSession.priceModifier)
     : 0;
 
-  // --- Schedule handlers ---
   const handleScheduleClick = (key: string, label: string) => {
     if (selectedScheduleKey === key) {
       setSelectedScheduleKey(null);
@@ -338,6 +327,7 @@ export function useCourseSchedule(courseId: string, onSignInClick: () => void) {
         const json = await res.json();
         setEnrollmentDetail(json.data ?? null);
         setShowSuccessModal(true);
+        document.body.style.overflow = "hidden";
       }
     } finally {
       setEnrolling(false);
@@ -347,6 +337,7 @@ export function useCourseSchedule(courseId: string, onSignInClick: () => void) {
   const handleEnrollClick = () => {
     if (isLoggedIn && profileChecked && !profileComplete) {
       setShowCompleteProfileModal(true);
+      document.body.style.overflow = "hidden";
       return;
     }
     handleEnroll(false);
@@ -354,7 +345,13 @@ export function useCourseSchedule(courseId: string, onSignInClick: () => void) {
 
   const handleSuccessDone = () => {
     setShowSuccessModal(false);
+    document.body.style.overflow = "";
     setIsEnrolled(true);
+  };
+
+  const closeCompleteProfileModal = () => {
+    setShowCompleteProfileModal(false);
+    document.body.style.overflow = "";
   };
 
   return {
@@ -394,7 +391,7 @@ export function useCourseSchedule(courseId: string, onSignInClick: () => void) {
     showSuccessModal,
     showCompleteProfileModal,
     conflictData,
-    setShowCompleteProfileModal,
+    closeCompleteProfileModal,
     setConflictData,
     // computed
     sessionMod,

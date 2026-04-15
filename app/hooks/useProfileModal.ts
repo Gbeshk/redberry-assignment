@@ -31,8 +31,22 @@ export function useProfileModal(
     mobile: "",
     age: "",
   });
+  const handleClose = () => {
+    setFullName("");
+    setEmail("");
+    setUsername("");
+    setMobileNumber("");
+    setAge("");
+    setAvatar(null);
+    setAvatarFile(null);
+    setAvatarPreview(null);
+    setErrors({ fullName: "", mobile: "", age: "" });
+    setApiError("");
+    setAvatarError("");
+    setIsAgeOpen(false);
+    onClose();
+  };
 
-  // Fetch profile on open
   useEffect(() => {
     if (!isOpen) return;
     const token = localStorage.getItem("authToken");
@@ -53,16 +67,13 @@ export function useProfileModal(
       .catch(() => {});
   }, [isOpen]);
 
-  // Lock scroll
-  useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
-
   const isFormValid = (() => {
-    if (!fullName.trim() || fullName.trim().length < 3 || fullName.trim().length > 50) return false;
+    if (
+      !fullName.trim() ||
+      fullName.trim().length < 3 ||
+      fullName.trim().length > 50
+    )
+      return false;
     const digits = mobileNumber.replace(/\s/g, "");
     if (!digits || !digits.startsWith("5") || digits.length !== 9) return false;
     if (!age || Number(age) < 16 || Number(age) > 100) return false;
@@ -74,22 +85,27 @@ export function useProfileModal(
 
     if (field === "fullName") {
       if (!fullName.trim()) next.fullName = "Name is required";
-      else if (fullName.trim().length < 3) next.fullName = "Name must be at least 3 characters";
-      else if (fullName.trim().length > 50) next.fullName = "Name must not exceed 50 characters";
+      else if (fullName.trim().length < 3)
+        next.fullName = "Name must be at least 3 characters";
+      else if (fullName.trim().length > 50)
+        next.fullName = "Name must not exceed 50 characters";
       else next.fullName = "";
     }
 
     if (field === "mobile") {
       const digits = mobileNumber.replace(/\s/g, "");
       if (!digits) next.mobile = "Mobile number is required";
-      else if (!digits.startsWith("5")) next.mobile = "Georgian mobile numbers must start with 5";
-      else if (digits.length !== 9) next.mobile = "Mobile number must be exactly 9 digits";
+      else if (!digits.startsWith("5"))
+        next.mobile = "Georgian mobile numbers must start with 5";
+      else if (digits.length !== 9)
+        next.mobile = "Mobile number must be exactly 9 digits";
       else next.mobile = "";
     }
 
     if (field === "age") {
       if (!age) next.age = "Age is required";
-      else if (Number(age) < 16) next.age = "You must be at least 16 years old to enroll";
+      else if (Number(age) < 16)
+        next.age = "You must be at least 16 years old to enroll";
       else if (Number(age) > 100) next.age = "Please enter a valid age";
       else next.age = "";
     }
@@ -182,12 +198,16 @@ export function useProfileModal(
       } else {
         const msg =
           json?.message ??
-          Object.values(json?.errors ?? {}).flat().join(" ") ??
+          Object.values(json?.errors ?? {})
+            .flat()
+            .join(" ") ??
           "Something went wrong. Please try again.";
         setApiError(String(msg));
       }
     } catch (e) {
-      setApiError("Something went wrong. Please check your connection and try again.");
+      setApiError(
+        "Something went wrong. Please check your connection and try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -217,11 +237,17 @@ export function useProfileModal(
       const canvas = document.createElement("canvas");
       canvas.width = Math.round(img.width * scale);
       canvas.height = Math.round(img.height * scale);
-      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas
+        .getContext("2d")!
+        .drawImage(img, 0, 0, canvas.width, canvas.height);
       canvas.toBlob(
         (blob) => {
           if (!blob) return;
-          const compressed = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
+          const compressed = new File(
+            [blob],
+            file.name.replace(/\.[^.]+$/, ".jpg"),
+            { type: "image/jpeg" },
+          );
           setAvatarFile(compressed);
           setAvatarPreview(URL.createObjectURL(compressed));
         },
@@ -236,7 +262,8 @@ export function useProfileModal(
     setAge(value);
     let msg = "";
     if (!value) msg = "Age is required";
-    else if (Number(value) < 16) msg = "You must be at least 16 years old to enroll";
+    else if (Number(value) < 16)
+      msg = "You must be at least 16 years old to enroll";
     else if (Number(value) > 100) msg = "Please enter a valid age";
     setErrors((prev) => ({ ...prev, age: msg }));
   };
@@ -269,5 +296,6 @@ export function useProfileModal(
     handleAgeChange,
     handleUpdate,
     handleAvatarChange,
+    handleClose,
   };
 }

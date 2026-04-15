@@ -8,7 +8,7 @@ import SessionTypeSection from "./SessionTypeSection";
 import PriceSummary from "./PriceSummary";
 import SuccessModal from "./SuccessModal";
 import CompleteProfileModal from "./CompleteProfileModal";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useCourseSchedule } from "@/app/hooks/useCourseSchedule";
 
 interface CourseScheduleProps {
@@ -31,11 +31,8 @@ export default function CourseScedule({
   onRatingSubmitted,
 }: CourseScheduleProps) {
   const s = useCourseSchedule(courseId, onSignInClick);
-  const [hasRated, setHasRated] = useState(isRated);
-
-  useEffect(() => {
-    setHasRated(isRated);
-  }, [isRated]);
+  const [localRated, setLocalRated] = useState(false);
+  const hasRated = isRated || localRated;
 
   if (!s.enrollmentChecked) return (
     <div className="w-[530px] space-y-[12px] animate-pulse">
@@ -53,7 +50,7 @@ export default function CourseScedule({
         enrollment={s.enrollmentDetail}
         isRated={hasRated}
         courseTitle={courseTitle}
-        onRated={(star) => { setHasRated(true); onRatingSubmitted?.(star); }}
+        onRated={(star) => { setLocalRated(true); onRatingSubmitted?.(star); }}
         onUnenroll={() => {
           s.setIsEnrolled(false);
           s.setEnrollmentDetail(null);
@@ -138,9 +135,9 @@ export default function CourseScedule({
       )}
       {s.showCompleteProfileModal && (
         <CompleteProfileModal
-          onClose={() => s.setShowCompleteProfileModal(false)}
+          onClose={() => s.closeCompleteProfileModal()}
           onComplete={() => {
-            s.setShowCompleteProfileModal(false);
+            s.closeCompleteProfileModal();
             onCompleteProfileClick();
           }}
         />

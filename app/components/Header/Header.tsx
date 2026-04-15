@@ -36,7 +36,7 @@ export default function Header({
 }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const onCoursesPage = pathname.startsWith("/courses");
+  const onCoursesPage = pathname === "/courses";
 
   return (
     <div className="flex w-full items-center h-[108px] border-b-[#D1D1D1] border-b-[1px]">
@@ -69,7 +69,6 @@ export default function Header({
                 <p className={NAV_TEXT_BASE}>Enrolled Courses</p>
               </div>
 
-              {/* Avatar + hover logout */}
               <div className="relative ml-[36px] group">
                 <div
                   className="relative cursor-pointer"

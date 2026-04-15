@@ -21,7 +21,7 @@ export default function ProfileModal({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") s.handleClose();
     };
     if (isOpen) document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
@@ -33,7 +33,7 @@ export default function ProfileModal({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{ backgroundColor: "#00000040" }}
-      onClick={onClose}
+      onClick={s.handleClose}
     >
       <div
         className="bg-white rounded-[16px] relative"
@@ -42,7 +42,7 @@ export default function ProfileModal({
       >
         <div
           className="cursor-pointer absolute top-[21px] right-[12px]"
-          onClick={onClose}
+          onClick={s.handleClose}
         >
           <CloseSvg />
         </div>

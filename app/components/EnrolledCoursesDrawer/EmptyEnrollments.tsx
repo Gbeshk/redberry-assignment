@@ -16,7 +16,7 @@ export default function EmptyEnrollments({ onBrowse }: EmptyEnrollmentsProps) {
       </p>
       <div
         onClick={onBrowse}
-        className="w-[175px] mt-[12px] h-[58px] bg-[#4F46E5] font-medium text-[16px] leading-[24px] tracking-[0%] text-center flex items-center justify-center rounded-[8px] text-white cursor-pointer"
+        className="w-[175px] mt-[12px] h-[58px] bg-[#4F46E5] hover:bg-[#281ED2] active:bg-[#1E169D] focus-visible:bg-[#281ED2] focus-visible:ring-2 focus-visible:ring-[#1E169D] focus-visible:outline-none transition-colors duration-300 ease-out  font-medium text-[16px] leading-[24px] tracking-[0%] text-center flex items-center justify-center rounded-[8px] text-white cursor-pointer"
       >
         Browse Courses
       </div>
