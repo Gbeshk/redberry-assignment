@@ -14,10 +14,6 @@ const STATIC_SESSION_PRICES: Record<string, string> = {
   hybrid: "+ $50",
 };
 
-const STATIC_SESSION_LOCATIONS: Record<string, string> = {
-  in_person: "Chavchavadze St.34",
-  hybrid: "Chavchavadze St.34",
-};
 
 const SESSION_CONFIGS = [
   {
@@ -101,7 +97,7 @@ export default function SessionTypeSection({
 
   const getLocation = (key: string) => {
     const s = matchSession(key);
-    return s?.location ?? STATIC_SESSION_LOCATIONS[key] ?? "Chavchavadze St.34";
+    return s?.location ?? "-";
   };
 
   const getSeatsNode = (key: string): React.ReactNode => {
